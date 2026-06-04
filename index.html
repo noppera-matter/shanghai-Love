@@ -1,0 +1,2506 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1a2e">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-512.png">
+<meta name="apple-mobile-web-app-title" content="I ❤️ SH">
+<title>I ❤️ SH</title>
+<style>
+:root{
+  --bg:#0f0f1a;--bg2:#1a1a2e;--bg3:#16213e;
+  --card:#1e1e35;--card2:#252540;
+  --accent:#e8b86d;--accent2:#c9956a;
+  --red:#e05a5a;--green:#5ab88a;--blue:#5a9be0;
+  --text:#f0ead6;--text2:#a89880;--text3:#6a5f52;
+  --border:rgba(232,184,109,0.15);--border2:rgba(232,184,109,0.3);
+  --radius:14px;
+  --font:'Noto Serif KR','Georgia',serif;
+  --mono:'Noto Sans SC',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;max-width:480px;margin:0 auto;padding-bottom:80px}
+.app-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 20px 12px;position:sticky;top:0;z-index:100}
+.app-title{font-size:18px;font-weight:700;color:var(--accent)}
+.app-sub{font-size:11px;color:var(--text2);margin-top:2px;font-family:var(--mono)}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg2);border-top:1px solid var(--border);display:flex;z-index:100}
+.nav-btn{flex:1;padding:10px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:10px;font-family:var(--font);transition:color .2s}
+.nav-btn.active{color:var(--accent)}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+.section{display:none;padding:14px 14px 0}
+.section.active{display:block}
+
+/* 파싱 입력 박스 */
+.paste-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.paste-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.paste-hint{font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:10px;font-family:var(--mono)}
+.paste-hint code{color:var(--accent2);background:rgba(232,184,109,0.08);padding:1px 5px;border-radius:4px;font-size:11px}
+.paste-textarea{width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:var(--font);outline:none;resize:none;min-height:90px;line-height:1.6}
+.paste-textarea:focus{border-color:var(--border2)}
+.parse-btn{width:100%;margin-top:8px;padding:11px;background:var(--accent);border:none;border-radius:10px;color:var(--bg);font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:opacity .2s}
+.parse-btn:active{opacity:.8}
+
+/* 미리보기 */
+.preview-wrap{background:var(--bg3);border:1px dashed var(--border2);border-radius:10px;padding:12px;margin-top:10px;display:none}
+.preview-wrap.show{display:block}
+.preview-title{font-size:11px;color:var(--accent2);margin-bottom:8px;font-family:var(--mono)}
+.preview-item{background:var(--card2);border-radius:8px;padding:10px 12px;margin-bottom:6px;cursor:pointer;border:1px solid transparent;transition:border-color .2s}
+.preview-item.selected{border-color:var(--accent)}
+.preview-item-name{font-size:14px;font-weight:700;color:var(--text)}
+.preview-item-zh{font-family:var(--mono);font-size:15px;color:var(--accent);margin:2px 0}
+.preview-item-sub{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.preview-actions{display:flex;gap:6px;margin-top:8px}
+.btn-confirm{flex:1;padding:9px;background:var(--green);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer}
+.btn-discard{flex:1;padding:9px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:13px;font-family:var(--font);cursor:pointer}
+
+/* 카드 */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
+.card-title{font-size:15px;font-weight:700;color:var(--text)}
+.card-zh{font-family:var(--mono);font-size:17px;color:var(--accent);margin:2px 0}
+.card-pinyin{font-size:12px;color:var(--text2);font-family:var(--mono);font-style:italic}
+.card-addr{font-size:12px;color:var(--text3);margin-top:4px;font-family:var(--mono)}
+.tag{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:20px;background:rgba(232,184,109,0.1);color:var(--accent2);border:1px solid rgba(232,184,109,0.2)}
+.custom-badge{font-size:10px;padding:2px 7px;border-radius:10px;background:rgba(90,155,224,0.15);color:var(--blue);border:1px solid rgba(90,155,224,0.3)}
+.visited-badge{font-size:10px;padding:2px 7px;border-radius:10px;background:rgba(90,184,138,0.15);color:var(--green);border:1px solid rgba(90,184,138,0.3)}
+.card-link{font-size:11px;color:var(--accent);text-decoration:none;display:inline-flex;align-items:center;gap:3px;margin-top:5px}
+.card-memo{margin-top:10px;background:var(--bg3);border-radius:8px;overflow:hidden}
+.memo-header{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--border)}
+.memo-label{font-size:11px;color:var(--text3)}
+.memo-save-btn{font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer}
+.memo-textarea{width:100%;padding:8px 10px;background:transparent;border:none;outline:none;resize:none;color:var(--text);font-size:13px;font-family:var(--font);line-height:1.6;min-height:55px}
+.icon-btn{background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;border-radius:6px;display:flex;align-items:center}
+.icon-btn:hover{color:var(--red)}
+.icon-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* 문장 */
+.phrase-cat{font-size:11px;font-weight:700;color:var(--accent2);letter-spacing:1px;font-family:var(--mono);margin:14px 0 7px}
+.phrase-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;transition:border-color .15s}
+.phrase-card:active{border-color:var(--border2)}
+/* 별표 버튼 */
+.star-btn{background:none;border:none;cursor:pointer;padding:2px 4px;font-size:17px;line-height:1;flex-shrink:0;transition:transform .15s}
+.star-btn:active{transform:scale(1.3)}
+/* 사용횟수 뱃지 */
+.use-count{font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:10px;background:rgba(90,155,224,0.12);color:var(--blue);border:1px solid rgba(90,155,224,0.2);margin-left:5px;vertical-align:middle}
+.use-count.hot{background:rgba(224,90,90,0.12);color:var(--red);border-color:rgba(224,90,90,0.25)}
+.phrase-ko{font-size:13px;color:var(--text2);margin-bottom:3px}
+.phrase-zh{font-family:var(--mono);font-size:16px;color:var(--text);font-weight:500}
+.phrase-pinyin{font-family:var(--mono);font-size:11px;color:var(--accent2);margin-top:2px;font-style:italic}
+
+/* 검색 */
+.search-wrap{position:relative;margin-bottom:12px}
+.search-input{width:100%;padding:10px 12px 10px 36px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:var(--font);outline:none}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3)}
+.search-icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.cat-filter{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px}
+.cat-filter::-webkit-scrollbar{display:none}
+.cat-chip{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:12px;font-family:var(--mono);background:var(--card);border:1px solid var(--border);color:var(--text2);cursor:pointer}
+.cat-chip.active{background:rgba(232,184,109,0.15);border-color:var(--border2);color:var(--accent)}
+.section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.section-ttl{font-size:16px;font-weight:700;color:var(--text)}
+.section-cnt{font-size:12px;color:var(--text3);background:var(--card2);padding:3px 10px;border-radius:20px;font-family:var(--mono)}
+.empty{text-align:center;padding:36px 20px;color:var(--text3);font-size:14px}
+.copy-toast{position:fixed;top:68px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none}
+.copy-toast.show{opacity:1}
+.add-fab{position:fixed;bottom:72px;right:calc(50% - 220px);width:48px;height:48px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(232,184,109,0.3);z-index:99;transition:transform .2s}
+.add-fab:active{transform:scale(.93)}
+.add-fab svg{width:24px;height:24px;stroke:var(--bg);fill:none;stroke-width:2.5}
+
+/* 예시 토글 */
+.example-toggle{font-size:11px;color:var(--accent2);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
+.example-box{background:var(--bg);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:11px;color:var(--text2);line-height:1.8;font-family:var(--mono);display:none;border:1px solid var(--border)}
+.example-box.show{display:block}
+
+/* 경비 탭 */
+.expense-input-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.expense-input-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:12px}
+.exp-row{display:flex;gap:8px;margin-bottom:10px}
+.exp-row .form-group{flex:1;margin-bottom:0}
+.form-group{margin-bottom:10px}
+.form-label{font-size:11px;color:var(--text2);margin-bottom:4px;display:block}
+.form-input{width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:var(--font);outline:none}
+.form-input:focus{border-color:var(--border2)}
+.cny-preview{font-size:12px;color:var(--accent);margin-top:4px;font-family:var(--mono);min-height:16px}
+.btn-add-exp{width:100%;padding:11px;background:var(--accent);border:none;border-radius:10px;color:var(--bg);font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;margin-top:2px}
+
+/* 요약 카드 */
+.expense-summary{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
+.summary-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.summary-row:last-child{margin-bottom:0;padding-top:8px;border-top:1px solid var(--border)}
+.summary-label{font-size:12px;color:var(--text2)}
+.summary-val{font-size:14px;font-weight:700;color:var(--text);font-family:var(--mono)}
+.summary-val.accent{color:var(--accent)}
+.summary-val.green{color:var(--green)}
+.rate-edit{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-family:var(--mono)}
+
+/* 경비 항목 카드 */
+.exp-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.exp-card-left{flex:1;min-width:0}
+.exp-date{font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:2px}
+.exp-cat-badge{display:inline-block;font-size:10px;font-family:var(--mono);padding:1px 7px;border-radius:10px;background:rgba(232,184,109,0.1);color:var(--accent2);border:1px solid rgba(232,184,109,0.2);margin-bottom:3px}
+.exp-memo{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exp-card-right{text-align:right;flex-shrink:0}
+.exp-cny{font-size:15px;font-weight:700;color:var(--accent);font-family:var(--mono)}
+.exp-krw{font-size:11px;color:var(--text2);font-family:var(--mono);margin-top:1px}
+
+/* 엑셀 내보내기 버튼 */
+.export-btn{width:100%;padding:12px;background:transparent;border:1px solid var(--green);border-radius:10px;color:var(--green);font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:12px}
+.export-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.exp-cat-filter{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px}
+.exp-cat-filter::-webkit-scrollbar{display:none}
+
+/* 일기 탭 */
+.diary-toolbar{display:flex;gap:8px;margin-bottom:12px}
+.diary-tool-btn{flex:1;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text2);font-size:12px;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:border-color .2s}
+.diary-tool-btn:active{border-color:var(--border2);color:var(--accent)}
+.diary-tool-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.diary-export-btn{width:100%;padding:11px;background:transparent;border:1px solid var(--accent2);border-radius:10px;color:var(--accent2);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:14px}
+.diary-export-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+/* 날짜 그룹 헤더 */
+.diary-date-hd{font-size:12px;font-weight:700;color:var(--accent2);font-family:var(--mono);letter-spacing:.5px;margin:16px 0 8px;padding-left:2px}
+/* 일기 항목 카드 */
+.diary-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.diary-photo-wrap{position:relative;width:100%;background:var(--bg3)}
+.diary-photo{width:100%;max-height:260px;object-fit:cover;display:block;cursor:pointer}
+.diary-no-photo{width:100%;height:100px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px;background:var(--bg3)}
+.diary-photo-add{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:5px 9px;color:#fff;font-size:11px;cursor:pointer;font-family:var(--font)}
+.diary-body{padding:12px 14px}
+.diary-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.diary-time{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.diary-location{font-size:11px;color:var(--accent2);font-family:var(--mono)}
+.diary-comment{width:100%;background:transparent;border:none;outline:none;resize:none;color:var(--text);font-size:14px;font-family:var(--font);line-height:1.7;min-height:60px;padding:0}
+.diary-comment::placeholder{color:var(--text3)}
+.diary-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.diary-save-btn{font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;font-family:var(--font)}
+.diary-del-btn{font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px}
+.diary-del-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+/* 사진 추가 입력 숨기기 */
+#diary-file-input{display:none}
+#diary-replace-input{display:none}
+/* 새 항목 입력 폼 */
+.diary-new-form{background:var(--card);border:1px solid var(--border2);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.diary-new-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px}
+.diary-new-preview{width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:8px;display:none}
+.diary-new-row{display:flex;gap:8px;margin-bottom:8px}
+.diary-new-row .form-group{flex:1;margin-bottom:0}
+.diary-new-textarea{width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:var(--font);outline:none;resize:none;min-height:70px;line-height:1.6}
+.diary-new-textarea:focus{border-color:var(--border2)}
+.btn-add-diary{width:100%;padding:11px;background:var(--accent);border:none;border-radius:10px;color:var(--bg);font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer}
+/* 사진 전체화면 뷰어 */
+.photo-viewer{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;align-items:center;justify-content:center}
+.photo-viewer.open{display:flex}
+.photo-viewer img{max-width:95vw;max-height:90vh;object-fit:contain;border-radius:6px}
+.photo-viewer-close{position:absolute;top:16px;right:16px;color:#fff;background:rgba(255,255,255,.15);border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* PDF 내보내기 버튼 */
+.diary-pdf-btn{width:100%;padding:11px;background:rgba(224,90,90,0.12);border:1px solid var(--red);border-radius:10px;color:var(--red);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px}
+.diary-pdf-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* PDF 오버레이 공통 */
+#pdf-overlay{display:none;position:fixed;inset:0;z-index:1000;overflow-y:auto}
+#pdf-overlay.open{display:block}
+.pdf-header-bar{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;position:sticky;top:0;z-index:20;background:var(--bg2);border-bottom:1px solid var(--border)}
+.pdf-header-title{font-size:15px;font-weight:700;color:var(--accent)}
+.pdf-header-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.pdf-print-btn{padding:9px 18px;background:var(--red);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer}
+.pdf-close-btn{padding:9px 14px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:13px;font-family:var(--font);cursor:pointer}
+/* 테마 선택 바 */
+.pdf-theme-bar{display:flex;gap:8px;padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;position:sticky;top:53px;z-index:19}
+.pdf-theme-bar::-webkit-scrollbar{display:none}
+.pdf-theme-chip{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-family:var(--mono);background:var(--card);border:1px solid var(--border);color:var(--text2);cursor:pointer;white-space:nowrap;transition:all .2s}
+.pdf-theme-chip.active{background:rgba(232,184,109,0.15);border-color:var(--border2);color:var(--accent)}
+.pdf-body{padding:0}
+
+/* ══════════════════════════════
+   테마 공통 변수
+══════════════════════════════ */
+.pdf-page{width:100%;box-sizing:border-box}
+
+/* ── 표지 ── */
+.pdf-cover{
+  min-height:60vw;max-height:480px;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:28px;position:relative;overflow:hidden;
+  page-break-after:always;
+}
+.pdf-cover-title{font-size:26px;font-weight:700;line-height:1.3;position:relative;z-index:2}
+.pdf-cover-sub{font-size:13px;margin-top:6px;position:relative;z-index:2;opacity:.8}
+.pdf-cover-deco{position:absolute;inset:0;z-index:1}
+
+/* ── 날짜 섹션 헤더 ── */
+.pdf-day-block{padding:24px 24px 0}
+.pdf-day-label{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.5px;margin-bottom:14px}
+
+/* ── 사진첩 카드 ── */
+.pdf-entry{margin:0 24px 20px;border-radius:12px;overflow:hidden;page-break-inside:avoid}
+/* 레이아웃 A: 사진 위, 텍스트 아래 */
+.pdf-entry-img-top img{width:100%;max-height:240px;object-fit:cover;display:block}
+.pdf-entry-caption{padding:12px 14px}
+.pdf-entry-meta{font-size:11px;margin-bottom:5px;opacity:.65;font-family:monospace}
+.pdf-entry-comment{font-size:13px;line-height:1.75}
+/* 레이아웃 B: 사이드 배치 공통 */
+.pdf-entry-side{display:flex;gap:0;border-radius:12px;overflow:hidden}
+.pdf-entry-side-img{width:42%;flex-shrink:0}
+.pdf-entry-side-img img{width:100%;height:100%;min-height:140px;object-fit:cover;display:block}
+.pdf-entry-side-body{flex:1;padding:14px 16px;display:flex;flex-direction:column;justify-content:center}
+/* 지그재그: 사진 왼쪽 */
+.pdf-side-left .pdf-entry-side-img{order:0; border-radius:12px 0 0 12px}
+.pdf-side-left .pdf-entry-side-body{order:1}
+/* 지그재그: 사진 오른쪽 */
+.pdf-side-right .pdf-entry-side-img{order:1; border-radius:0 12px 12px 0}
+.pdf-side-right .pdf-entry-side-body{order:0}
+/* 사진 없는 텍스트 전용 항목 */
+.pdf-entry-text-only .pdf-entry-caption{padding:12px 16px}
+/* 빈 사진 자리 */
+.pdf-no-img{display:flex;align-items:center;justify-content:center;font-size:11px;opacity:.4}
+
+/* 꼬리말 */
+.pdf-footer-bar{padding:12px 24px;font-size:10px;text-align:center;opacity:.4;font-family:monospace;page-break-inside:avoid}
+
+/* ══════════════════════════════
+   테마 1: 빈티지 (크림 + 갈색)
+══════════════════════════════ */
+#pdf-overlay.theme-vintage .pdf-page{background:#fdf6ec}
+#pdf-overlay.theme-vintage .pdf-cover{background:#3d2b1f;color:#f5e6c8}
+#pdf-overlay.theme-vintage .pdf-cover-deco{
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(205,160,100,.25) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(160,100,60,.2) 0%, transparent 50%);
+}
+#pdf-overlay.theme-vintage .pdf-cover::after{
+  content:'';position:absolute;inset:0;z-index:1;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c8a06e' fill-opacity='0.07'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+#pdf-overlay.theme-vintage .pdf-day-label{background:#3d2b1f;color:#f5e6c8}
+#pdf-overlay.theme-vintage .pdf-entry{box-shadow:0 2px 12px rgba(61,43,31,.12);background:#fff8f0}
+#pdf-overlay.theme-vintage .pdf-entry-caption,
+#pdf-overlay.theme-vintage .pdf-entry-side-body{background:#fff8f0}
+#pdf-overlay.theme-vintage .pdf-entry-comment{color:#3d2b1f}
+#pdf-overlay.theme-vintage .pdf-entry-meta{color:#8b6040}
+#pdf-overlay.theme-vintage .pdf-footer-bar{color:#8b6040;border-top:1px dashed #c8a06e}
+
+/* ══════════════════════════════
+   테마 2: 모던 다크
+══════════════════════════════ */
+#pdf-overlay.theme-modern .pdf-page{background:#111118}
+#pdf-overlay.theme-modern .pdf-cover{background:#0a0a10;color:#f0ead6}
+#pdf-overlay.theme-modern .pdf-cover-deco{
+  background:linear-gradient(135deg,#1a1a2e 0%,#0f0f1a 60%,#16213e 100%);
+}
+#pdf-overlay.theme-modern .pdf-cover::after{
+  content:'';position:absolute;inset:0;z-index:1;
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e8b86d' fill-opacity='0.04'%3E%3Cpath d='M0 0h40v1H0zM0 39h40v1H0zM0 0h1v40H0zM39 0h1v40h-1z'/%3E%3C/g%3E%3C/svg%3E");
+}
+#pdf-overlay.theme-modern .pdf-cover-title{color:#e8b86d}
+#pdf-overlay.theme-modern .pdf-day-label{background:#e8b86d;color:#111}
+#pdf-overlay.theme-modern .pdf-entry{border:1px solid rgba(232,184,109,.15);background:#1a1a2e}
+#pdf-overlay.theme-modern .pdf-entry-caption,
+#pdf-overlay.theme-modern .pdf-entry-side-body{background:#1a1a2e}
+#pdf-overlay.theme-modern .pdf-entry-comment{color:#f0ead6}
+#pdf-overlay.theme-modern .pdf-entry-meta{color:#e8b86d}
+#pdf-overlay.theme-modern .pdf-footer-bar{color:#e8b86d;border-top:1px solid rgba(232,184,109,.2)}
+
+/* ══════════════════════════════
+   테마 3: 미니멀 (흰 배경)
+══════════════════════════════ */
+#pdf-overlay.theme-minimal .pdf-page{background:#fff}
+#pdf-overlay.theme-minimal .pdf-cover{background:#f8f8f8;color:#111;border-bottom:3px solid #111}
+#pdf-overlay.theme-minimal .pdf-cover-deco{background:#f8f8f8}
+#pdf-overlay.theme-minimal .pdf-cover-title{font-size:28px;letter-spacing:-1px}
+#pdf-overlay.theme-minimal .pdf-day-label{border:1.5px solid #111;color:#111;background:transparent;border-radius:4px}
+#pdf-overlay.theme-minimal .pdf-entry{border-bottom:1px solid #e8e8e8;border-radius:0;margin:0;padding:20px 24px}
+#pdf-overlay.theme-minimal .pdf-entry-img-top img{border-radius:4px}
+#pdf-overlay.theme-minimal .pdf-entry-caption{padding:10px 0 0}
+#pdf-overlay.theme-minimal .pdf-entry-comment{color:#222;font-size:14px}
+#pdf-overlay.theme-minimal .pdf-entry-meta{color:#888}
+#pdf-overlay.theme-minimal .pdf-footer-bar{color:#aaa}
+
+/* ══════════════════════════════
+   테마 4: 트래블 (레드 포인트)
+══════════════════════════════ */
+#pdf-overlay.theme-travel .pdf-page{background:#fafafa}
+#pdf-overlay.theme-travel .pdf-cover{
+  background:linear-gradient(160deg,#c0392b 0%,#8e1a13 100%);color:#fff;
+  min-height:70vw;
+}
+#pdf-overlay.theme-travel .pdf-cover::after{
+  content:'';position:absolute;inset:0;z-index:1;
+  background-image: url("data:image/svg+xml,%3Csvg width='52' height='52' viewBox='0 0 52 52' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M26 0l26 26-26 26L0 26z' fill='none' stroke='%23fff' stroke-opacity='.05' stroke-width='1'/%3E%3C/svg%3E");
+}
+#pdf-overlay.theme-travel .pdf-cover-title{font-size:30px;text-shadow:0 2px 8px rgba(0,0,0,.3)}
+#pdf-overlay.theme-travel .pdf-day-label{background:#c0392b;color:#fff;border-radius:4px}
+#pdf-overlay.theme-travel .pdf-entry{box-shadow:0 2px 10px rgba(0,0,0,.08);background:#fff}
+#pdf-overlay.theme-travel .pdf-entry-caption,
+#pdf-overlay.theme-travel .pdf-entry-side-body{background:#fff}
+#pdf-overlay.theme-travel .pdf-entry-comment{color:#222}
+#pdf-overlay.theme-travel .pdf-entry-meta{color:#c0392b}
+#pdf-overlay.theme-travel .pdf-footer-bar{color:#c0392b;border-top:2px solid #c0392b}
+
+/* ══════════════════════════════
+   인쇄 미디어
+══════════════════════════════ */
+@media print{
+  @page{size:A4;margin:0}
+  body > *:not(#pdf-overlay){display:none !important}
+  #pdf-overlay{display:block !important;position:static !important;overflow:visible !important}
+  .pdf-header-bar,.pdf-theme-bar{display:none !important}
+  /* 테마별 print 배경 강제 출력 */
+  .pdf-page,.pdf-entry,.pdf-cover,.pdf-entry-caption,.pdf-entry-side-body{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+  .pdf-cover{min-height:180mm;max-height:none;page-break-after:always}
+  .pdf-entry{page-break-inside:avoid}
+  .pdf-day-block{page-break-inside:avoid}
+}
+
+/* ══════════════════════════════
+   최종 통합 기능: 로딩 / 수정 / 경비 사진 / PDF 몽환 배경
+══════════════════════════════ */
+
+/* 첫 화면 로딩 */
+#app-splash{
+  position:fixed;inset:0;z-index:99999;
+  background:radial-gradient(circle at center,#fff7ed 0%,#f8f7f4 45%,#ecfdf5 100%);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  transition:opacity .45s ease,visibility .45s ease;
+}
+#app-splash.hide{opacity:0;visibility:hidden;pointer-events:none}
+.splash-logo{width:132px;height:132px;object-fit:contain;animation:splashPulse 1.35s ease-in-out infinite;filter:drop-shadow(0 14px 24px rgba(5,150,105,.18))}
+.splash-title{margin-top:18px;font-size:20px;font-weight:900;letter-spacing:-.04em;color:#064e3b}
+.splash-sub{margin-top:4px;font-size:11px;font-weight:700;color:#059669;letter-spacing:.12em;text-transform:uppercase}
+.splash-dots{display:flex;gap:6px;margin-top:18px}
+.splash-dots span{width:7px;height:7px;border-radius:999px;background:#10b981;animation:splashDot 1s ease-in-out infinite}
+.splash-dots span:nth-child(2){animation-delay:.15s}.splash-dots span:nth-child(3){animation-delay:.3s}
+@keyframes splashPulse{0%,100%{transform:scale(1);opacity:.92}50%{transform:scale(1.08);opacity:1}}
+@keyframes splashDot{0%,100%{transform:translateY(0);opacity:.35}50%{transform:translateY(-5px);opacity:1}}
+
+/* 수정 모달 */
+.edit-modal{position:fixed;inset:0;z-index:100001;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.58);padding:18px}
+.edit-modal.open{display:flex}
+.edit-panel{width:100%;max-width:460px;max-height:88vh;overflow-y:auto;background:#fff;border-radius:24px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.22);color:#1c1917}
+.edit-title{font-size:17px;font-weight:900;margin-bottom:14px;color:#064e3b}
+.edit-label{display:block;font-size:11px;font-weight:800;color:#78716c;margin:10px 0 5px}
+.edit-input,.edit-textarea{width:100%;border:1px solid #e7e5e4;background:#fafaf9;border-radius:12px;padding:11px 12px;font-size:14px;outline:none;color:#1c1917}
+.edit-textarea{min-height:86px;resize:vertical;line-height:1.6}
+.edit-actions{display:flex;gap:8px;margin-top:16px}
+.edit-save{flex:1;border:0;border-radius:13px;padding:12px;background:#059669;color:#fff;font-weight:900;cursor:pointer}
+.edit-cancel{flex:1;border:1px solid #e7e5e4;border-radius:13px;padding:12px;background:#fff;color:#57534e;font-weight:800;cursor:pointer}
+.small-edit-btn{border:0;border-radius:999px;padding:6px 10px;background:rgba(90,155,224,.13);color:var(--blue);font-size:11px;font-weight:900;cursor:pointer;margin-right:6px;font-family:var(--font)}
+.small-edit-btn:active{transform:scale(.96)}
+
+/* 경비 사진 */
+.expense-photo-tools{display:flex;gap:8px;margin-bottom:10px}
+.expense-photo-btn{flex:1;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;color:var(--text2);font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font)}
+.expense-photo-preview{display:none;position:relative;margin-bottom:10px;border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--bg3)}
+.expense-photo-preview.show{display:block}
+.expense-photo-preview img{width:100%;max-height:180px;object-fit:cover;display:block}
+.expense-photo-remove{position:absolute;top:8px;right:8px;border:0;border-radius:999px;background:rgba(0,0,0,.62);color:white;width:30px;height:30px;font-size:16px;cursor:pointer}
+.exp-photo-thumb{width:56px;height:56px;border-radius:12px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;cursor:pointer;background:var(--bg3)}
+.expense-photo-viewer{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.88);z-index:100000;padding:18px}
+.expense-photo-viewer.open{display:flex}
+.expense-photo-viewer img{max-width:96vw;max-height:88vh;object-fit:contain;border-radius:14px}
+.expense-photo-viewer button{position:fixed;top:16px;right:16px;width:38px;height:38px;border:0;border-radius:999px;background:rgba(255,255,255,.18);color:white;font-size:22px;cursor:pointer}
+
+/* PDF 몽환 배경 테마 */
+#pdf-overlay.theme-dreamy .pdf-page{background:#fff4f7;position:relative;overflow:hidden}
+#pdf-overlay.theme-dreamy .pdf-page::before{content:'';position:fixed;inset:0;background-image:url('pdf-bg.png');background-size:cover;background-position:center top;background-repeat:no-repeat;opacity:.18;z-index:0;pointer-events:none}
+#pdf-overlay.theme-dreamy .pdf-cover{background:#fff4f7;color:#4a2d3f;min-height:92vh}
+#pdf-overlay.theme-dreamy .pdf-cover::before{content:'';position:absolute;inset:0;background-image:url('pdf-bg.png');background-size:cover;background-position:center top;background-repeat:no-repeat;opacity:.98;z-index:0}
+#pdf-overlay.theme-dreamy .pdf-cover::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,246,250,.08),rgba(255,246,250,.18),rgba(255,246,250,.45));z-index:1}
+#pdf-overlay.theme-dreamy .pdf-cover-title,#pdf-overlay.theme-dreamy .pdf-cover-sub{color:#4a2d3f;text-shadow:0 1px 10px rgba(255,255,255,.9)}
+#pdf-overlay.theme-dreamy .pdf-day-block,#pdf-overlay.theme-dreamy .pdf-entry,#pdf-overlay.theme-dreamy .pdf-footer-bar{position:relative;z-index:1}
+#pdf-overlay.theme-dreamy .pdf-day-label{background:rgba(255,255,255,.72);color:#b36b8c;border:1px solid rgba(179,107,140,.18);box-shadow:0 4px 18px rgba(179,107,140,.10);backdrop-filter:blur(6px)}
+#pdf-overlay.theme-dreamy .pdf-entry{background:rgba(255,255,255,.76);border:1px solid rgba(255,255,255,.88);box-shadow:0 10px 30px rgba(179,107,140,.12);backdrop-filter:blur(5px)}
+#pdf-overlay.theme-dreamy .pdf-entry-caption,#pdf-overlay.theme-dreamy .pdf-entry-side-body{background:rgba(255,255,255,.76)}
+#pdf-overlay.theme-dreamy .pdf-entry-comment{color:#4a2d3f}
+#pdf-overlay.theme-dreamy .pdf-entry-meta{color:#b36b8c}
+#pdf-overlay.theme-dreamy .pdf-footer-bar{color:#b36b8c;border-top:1px dashed rgba(179,107,140,.25)}
+
+@media print{
+  #pdf-overlay.theme-dreamy .pdf-page::before,
+  #pdf-overlay.theme-dreamy .pdf-cover::before,
+  #pdf-overlay.theme-dreamy .pdf-cover::after{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+  #pdf-overlay.theme-dreamy .pdf-cover{min-height:297mm !important;height:297mm !important}
+}
+
+</style>
+</head>
+<body>
+
+<!-- 첫 화면 로딩 애니메이션 -->
+<div id="app-splash">
+  <img class="splash-logo" src="icon-512.png" alt="I Love SH">
+  <div class="splash-title">I ❤️ SH</div>
+  <div class="splash-sub">Shanghai Travel</div>
+  <div class="splash-dots"><span></span><span></span><span></span></div>
+</div>
+
+
+<div class="app-header">
+  <div class="app-title">上海, Love</div>
+  <div class="app-sub">🇨🇳 offline-ready travel notebook</div>
+</div>
+
+<!-- ═══ 장소 탭 ═══ -->
+<section class="section active" id="sec-places">
+
+  <!-- 붙여넣기 파서 -->
+  <div class="paste-box">
+    <div class="paste-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+      AI 텍스트 붙여넣기
+    </div>
+    <div class="paste-hint">
+      ChatGPT·Claude 등에서 받은 텍스트를 그대로 붙여넣으세요.<br>
+      <button class="example-toggle" onclick="toggleEx('place-ex')">예시 보기 ▾</button>
+    </div>
+    <div class="example-box" id="place-ex">
+1. 외탄(外滩, Wàitān) — 황포강변 야경 명소. 주소: 中山东一路, 황포구. 오후 8시 이후 추천.
+2. 예원(豫园, Yùyuán) — 명나라 시대 정원. 주소: 安仁街218号. 입장료 있음, 주변 먹거리 다양.
+3. 난징루(南京路, Nánjīng Lù) — 상하이 최대 쇼핑거리.
+    </div>
+    <textarea class="paste-textarea" id="place-paste" placeholder="여기에 텍스트 붙여넣기..."></textarea>
+    <button class="parse-btn" onclick="parsePlaceText()">→ 장소 추출하기</button>
+    <div class="preview-wrap" id="place-preview"></div>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+    <input class="search-input" id="place-search" placeholder="장소 검색..." oninput="renderPlaces()">
+  </div>
+  <div class="cat-filter" id="cat-filter"></div>
+  
+<div style="display:flex;gap:8px;margin-bottom:12px">
+<button class="diary-export-btn" onclick="exportPlacesTxt()" style="margin-bottom:0">📄 장소 TXT 내보내기</button>
+<button class="diary-pdf-btn" onclick="exportPlacesPdf()" style="margin-bottom:0">📕 장소 PDF 출력</button>
+</div>
+<div class="section-hd">
+    <span class="section-ttl">장소 목록</span>
+    <span class="section-cnt" id="place-count">0곳</span>
+  </div>
+  <div id="place-list"></div>
+</section>
+
+<!-- ═══ 문장 탭 ═══ -->
+<section class="section" id="sec-phrases">
+
+  <div class="paste-box">
+    <div class="paste-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+      AI 텍스트 붙여넣기
+    </div>
+    <div class="paste-hint">
+      번역 결과나 표현 목록을 그대로 붙여넣으세요.<br>
+      <button class="example-toggle" onclick="toggleEx('phrase-ex')">예시 보기 ▾</button>
+    </div>
+    <div class="example-box" id="phrase-ex">
+■ 식당에서
+배가 고파요 — 我饿了 (Wǒ è le)
+추천 메뉴가 뭐예요? — 有什么推荐的菜？(Yǒu shén me tuī jiàn de cài？)
+
+■ 쇼핑할 때
+더 싼 거 있나요? — 有更便宜的吗？(Yǒu gèng pián yi de ma？)
+이걸로 할게요 — 我要这个 (Wǒ yào zhè gè)
+    </div>
+    <textarea class="paste-textarea" id="phrase-paste" placeholder="여기에 텍스트 붙여넣기..."></textarea>
+    <button class="parse-btn" onclick="parsePhraseText()">→ 문장 추출하기</button>
+    <div class="preview-wrap" id="phrase-preview"></div>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+    <input class="search-input" id="phrase-search" placeholder="문장 검색..." oninput="renderPhrases()">
+  </div>
+  <!-- 문장 탭 필터 -->
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <button class="cat-chip active" id="pf-all"  onclick="setPhraseFilter('all')">전체</button>
+    <button class="cat-chip"        id="pf-star" onclick="setPhraseFilter('star')">⭐ 즐겨찾기</button>
+    <button class="cat-chip"        id="pf-freq" onclick="setPhraseFilter('freq')">🔥 자주 쓴 순</button>
+  </div>
+  <div id="phrase-list"></div>
+</section>
+
+<!-- ═══ 경비 탭 ═══ -->
+<section class="section" id="sec-expense">
+  <div class="expense-input-box">
+    <div class="expense-input-title">💴 지출 추가</div>
+    <div class="exp-row">
+      <div class="form-group">
+        <label class="form-label">날짜</label>
+        <input class="form-input" type="date" id="ex-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">카테고리</label>
+        <input class="form-input" id="ex-cat" placeholder="식비 / 교통 / 쇼핑...">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">금액 (위안 ¥)</label>
+      <input class="form-input" id="ex-cny" type="number" placeholder="0" oninput="previewKrw()" style="font-size:18px;font-family:var(--mono)">
+      <div class="cny-preview" id="cny-preview"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">메모</label>
+      <input class="form-input" id="ex-memo" placeholder="어디서, 무엇을...">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">영수증/사진 (선택)</label>
+      <div class="expense-photo-tools">
+        <button type="button" class="expense-photo-btn" onclick="document.getElementById('ex-photo-input').click()">사진 선택</button>
+        <button type="button" class="expense-photo-btn" onclick="document.getElementById('ex-camera-input').click()">카메라 촬영</button>
+      </div>
+      <div class="expense-photo-preview" id="ex-photo-preview">
+        <img id="ex-photo-img" alt="경비 사진 미리보기">
+        <button type="button" class="expense-photo-remove" onclick="clearExpensePhoto()">×</button>
+      </div>
+    </div>
+
+    <button class="btn-add-exp" onclick="addExpense()">+ 추가</button>
+  </div>
+  <div class="expense-summary" id="exp-summary"></div>
+  <button class="export-btn" onclick="exportExcel()">
+    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    엑셀(.xlsx)로 내보내기
+  </button>
+  <div class="exp-cat-filter" id="exp-cat-filter"></div>
+  <div id="expense-list"></div>
+</section>
+
+<!-- ═══ 일기 탭 ═══ -->
+<section class="section" id="sec-diary">
+
+  <!-- 새 항목 입력 폼 -->
+  <div class="diary-new-form">
+    <div class="diary-new-title">📷 새 기록 추가</div>
+    <img id="diary-new-preview" class="diary-new-preview" alt="">
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="diary-tool-btn" onclick="document.getElementById('diary-file-input').click()">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        사진 선택
+      </button>
+      <button class="diary-tool-btn" onclick="document.getElementById('diary-camera-input').click()">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        카메라
+      </button>
+    </div>
+    <div class="diary-new-row">
+      <div class="form-group">
+        <label class="form-label">날짜</label>
+        <input class="form-input" type="date" id="diary-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">장소 (선택)</label>
+        <input class="form-input" id="diary-location" placeholder="예: 외탄">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label class="form-label">코멘트</label>
+      <textarea class="diary-new-textarea" id="diary-comment" placeholder="오늘의 기록을 남겨주세요..."></textarea>
+    </div>
+    <button class="btn-add-diary" onclick="addDiaryEntry()">+ 기록 추가</button>
+  </div>
+
+  <!-- TXT 내보내기 -->
+  <button class="diary-export-btn" onclick="exportDiaryTxt()">
+    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    텍스트(.txt)로 내보내기
+  </button>
+  <!-- PDF 내보내기 -->
+  <button class="diary-pdf-btn" onclick="openPdfPreview()">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    PDF 사진첩으로 저장
+  </button>
+
+  <!-- 일기 목록 -->
+  <div id="diary-list"></div>
+</section>
+
+<!-- PDF 미리보기 오버레이 -->
+<div id="pdf-overlay">
+  <div class="pdf-header-bar">
+    <div>
+      <div class="pdf-header-title">📄 PDF 사진첩</div>
+      <div class="pdf-header-sub">테마 선택 후 저장/인쇄</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="pdf-close-btn" onclick="closePdfPreview()">닫기</button>
+      <button class="pdf-print-btn" onclick="window.print()">저장 · 인쇄</button>
+    </div>
+  </div>
+  <!-- 테마 선택 바 -->
+  <div class="pdf-theme-bar" id="pdf-theme-bar">
+    <button class="pdf-theme-chip" id="tc-vintage" onclick="setPdfTheme('vintage')">🟤 빈티지</button>
+    <button class="pdf-theme-chip" id="tc-modern"  onclick="setPdfTheme('modern')">⬛ 모던 다크</button>
+    <button class="pdf-theme-chip" id="tc-minimal" onclick="setPdfTheme('minimal')">⬜ 미니멀</button>
+    <button class="pdf-theme-chip" id="tc-travel"  onclick="setPdfTheme('travel')">🔴 트래블</button>
+    <button class="pdf-theme-chip active" id="tc-dreamy" onclick="setPdfTheme('dreamy')">🌸 몽환 배경</button>
+  </div>
+  <div class="pdf-body" id="pdf-body"></div>
+</div>
+
+<!-- 파일 인풋들 -->
+<input type="file" id="diary-file-input" accept="image/*" multiple onchange="onDiaryFileSelect(event)">
+<input type="file" id="diary-camera-input" accept="image/*" capture="environment" onchange="onDiaryFileSelect(event)">
+<input type="file" id="diary-replace-input" accept="image/*" onchange="onDiaryReplace(event)">
+
+<!-- 사진 전체화면 뷰어 -->
+<div class="photo-viewer" id="photo-viewer" onclick="closeViewer()">
+  <button class="photo-viewer-close" onclick="closeViewer()">✕</button>
+  <img id="viewer-img" src="" alt="">
+</div>
+
+
+<input type="file" id="ex-photo-input" accept="image/*" onchange="onExpensePhotoSelect(event)" style="display:none">
+<input type="file" id="ex-camera-input" accept="image/*" capture="environment" onchange="onExpensePhotoSelect(event)" style="display:none">
+
+<div class="expense-photo-viewer" id="expense-photo-viewer" onclick="closeExpensePhotoViewer()">
+  <button type="button" onclick="closeExpensePhotoViewer()">×</button>
+  <img id="expense-viewer-img" src="" alt="경비 사진">
+</div>
+
+<div class="edit-modal" id="edit-modal" onclick="closeEditModal(event)">
+  <div class="edit-panel" onclick="event.stopPropagation()">
+    <div class="edit-title" id="edit-modal-title">수정</div>
+    <div id="edit-modal-body"></div>
+    <div class="edit-actions">
+      <button class="edit-cancel" onclick="closeEditModal()">취소</button>
+      <button class="edit-save" onclick="saveEditModal()">저장</button>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-places" onclick="switchTab('places')">
+    <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    장소
+  </button>
+  <button class="nav-btn" id="nav-phrases" onclick="switchTab('phrases')">
+    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    문장
+  </button>
+  <button class="nav-btn" id="nav-expense" onclick="switchTab('expense')">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    경비
+  </button>
+  <button class="nav-btn" id="nav-diary" onclick="switchTab('diary')">
+    <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+    일기
+  </button>
+</nav>
+
+<input type="file" id="place-file-input" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" style="display:none"><input type="file" id="place-camera-input" accept="image/*" capture="environment" style="display:none"><div class="copy-toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════
+   저장소
+═══════════════════════════════════════ */
+const SK={p:'cn_places',m:'cn_memos',ph:'cn_phrases',ex:'cn_expenses',rate:'cn_rate',di:'cn_diary',ps:'cn_phrase_stat'};
+let places=[], memos={}, customPhrases=[], expenses=[], diaryEntries=[], phraseStat={}, currentCat='전체', expCat='전체', CNY_RATE=220;
+
+function save(){
+  localStorage.setItem(SK.p,JSON.stringify(places));
+  localStorage.setItem(SK.m,JSON.stringify(memos));
+  localStorage.setItem(SK.ph,JSON.stringify(customPhrases));
+  localStorage.setItem(SK.ex,JSON.stringify(expenses));
+  localStorage.setItem(SK.rate,String(CNY_RATE));
+  localStorage.setItem(SK.ps,JSON.stringify(phraseStat));
+  saveDiary();
+}
+function saveDiary(){
+  try{ localStorage.setItem(SK.di, JSON.stringify(diaryEntries)); }
+  catch(e){
+    const slim=diaryEntries.map(d=>({...d,img:''}));
+    try{ localStorage.setItem(SK.di, JSON.stringify(slim)); }catch(e2){}
+    showToast('저장 용량 초과 — 이미지 일부 미저장');
+  }
+}
+function load(){
+  try{places=JSON.parse(localStorage.getItem(SK.p))||[];}catch(e){places=[];}
+  try{memos=JSON.parse(localStorage.getItem(SK.m))||{};}catch(e){memos={};}
+  try{customPhrases=JSON.parse(localStorage.getItem(SK.ph))||[];}catch(e){customPhrases=[];}
+  try{expenses=JSON.parse(localStorage.getItem(SK.ex))||[];}catch(e){expenses=[];}
+  try{const r=localStorage.getItem(SK.rate);if(r)CNY_RATE=parseFloat(r);}catch(e){}
+  try{diaryEntries=JSON.parse(localStorage.getItem(SK.di))||[];}catch(e){diaryEntries=[];}
+  try{phraseStat=JSON.parse(localStorage.getItem(SK.ps))||{};}catch(e){phraseStat={};}
+}
+
+/* ═══════════════════════════════════════
+   탭
+═══════════════════════════════════════ */
+function switchTab(t){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+t).classList.add('active');
+  document.getElementById('nav-'+t).classList.add('active');
+  if(t==='expense') initDateInput();
+  if(t==='diary') initDiaryDate();
+}
+function toggleEx(id){
+  const el=document.getElementById(id);
+  el.classList.toggle('show');
+  const btn=el.previousElementSibling;
+  btn.textContent=el.classList.contains('show')?'예시 닫기 ▴':'예시 보기 ▾';
+}
+
+/* ═══════════════════════════════════════
+   장소 파서
+   패턴: 한자(漢字, pīnyīn), 주소:, —/-/: 구분자
+═══════════════════════════════════════ */
+function parsePlaceText(){
+  const raw=document.getElementById('place-paste').value.trim();
+  if(!raw){showToast('텍스트를 붙여넣어 주세요');return;}
+
+  const lines=raw.split('\n').map(l=>l.trim()).filter(l=>l.length>2);
+  const results=[];
+
+  for(const line of lines){
+    const item=extractPlace(line);
+    if(item) results.push(item);
+  }
+
+  if(!results.length){showToast('장소를 인식하지 못했습니다. 예시 형식을 참고하세요');return;}
+  showPlacePreview(results);
+}
+
+function extractPlace(line){
+  // 번호, 불릿 제거
+  let s=line.replace(/^[\d]+[.\)、]\s*/,'').replace(/^[•·▪■◆✦\-]\s*/,'');
+
+  // 한자+병음 추출: 한국어(漢字, pīnyīn) 형태
+  // 패턴1: 이름(한자, 병음)
+  let name='', zh='', py='', addr='', memo='';
+
+  const p1=s.match(/^(.+?)[（(]([^\),）]+)[,，\s]+([^)）]+)[)）]/);
+  if(p1){
+    name=p1[1].trim();
+    // 한자인지 병음인지 판단
+    if(/[\u4e00-\u9fff]/.test(p1[2])){ zh=p1[2].trim(); py=p1[3].trim(); }
+    else { py=p1[2].trim(); zh=p1[3].trim(); }
+    s=s.slice(p1[0].length);
+  } else {
+    // 패턴2: 이름(한자) 만 있는 경우
+    const p2=s.match(/^(.+?)[（(]([^\)）]+)[)）]/);
+    if(p2){
+      name=p2[1].trim();
+      const inner=p2[2].trim();
+      if(/[\u4e00-\u9fff]/.test(inner)) zh=inner;
+      else py=inner;
+      s=s.slice(p2[0].length);
+    } else {
+      // 패턴3: 한자가 이름에 섞인 경우 "外滩 Wàitān"
+      const p3=s.match(/^([\u4e00-\u9fff\u3400-\u4dbf]+)\s+([A-Za-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\s]+?)(?:[—\-–:：]|$)/i);
+      if(p3){ zh=p3[1]; py=p3[2].trim(); s=s.slice(p3[0].length); name=zh; }
+      else {
+        // 패턴4: 순수 한국어 이름 + 구분자
+        const p4=s.match(/^(.+?)(?:\s*[—–\-:：]\s*)/);
+        if(p4){ name=p4[1].trim(); s=s.slice(p4[0].length); }
+        else { name=s; s=''; }
+      }
+    }
+  }
+
+  // 이름이 너무 길면 스킵 (설명문일 가능성)
+  if(name.length>20) return null;
+
+  // 구분자 이후 텍스트에서 주소/메모 추출
+  const rest=s.replace(/^[\s—–\-:：]+/,'');
+  const addrMatch=rest.match(/주소[：:]\s*([^\.\n。]+)/);
+  if(addrMatch){ addr=addrMatch[1].trim(); }
+
+  // 나머지를 메모로
+  const memoText=rest.replace(/주소[：:][^\.\n。]+[.\n]?/,'').replace(/^[\s,，。.]+/,'').trim();
+  if(memoText.length>2) memo=memoText;
+
+  if(!name) return null;
+  return {name, zh, py, addr, memo, cat:'', link:'', visited:false};
+}
+
+let parsedPlaces=[];
+// 미리보기 단계에서 각 항목에 첨부된 사진 (인덱스 → dataURL)
+let parsedPlacePhotos={};
+
+function showPlacePreview(items){
+  parsedPlaces=items;
+  parsedPlacePhotos={};
+  const wrap=document.getElementById('place-preview');
+  wrap.className='preview-wrap show';
+  wrap.innerHTML=`<div class="preview-title">✦ ${items.length}개 장소 인식됨 — 탭해서 선택/해제</div>`
+    +items.map((it,i)=>`
+    <div class="preview-item selected" id="prev-p-${i}" onclick="togglePrevSel('prev-p-${i}')">
+      <div class="preview-item-name">${esc(it.name)}</div>
+      ${it.zh?`<div class="preview-item-zh">${esc(it.zh)}${it.py?' · <span style="font-size:11px;color:var(--accent2);font-style:italic">'+esc(it.py)+'</span>':''}</div>`:''}
+      ${it.addr?`<div class="preview-item-sub">📍 ${esc(it.addr)}</div>`:''}
+      ${it.memo?`<div class="preview-item-sub" style="margin-top:2px">📝 ${esc(it.memo.slice(0,40))}${it.memo.length>40?'…':''}</div>`:''}
+      <div style="display:flex;gap:6px;margin-top:8px" onclick="event.stopPropagation()">
+        <button class="small-edit-btn" onclick="prevPhotoSelect(${i},'file')">📁 사진</button>
+        <button class="small-edit-btn" onclick="prevPhotoSelect(${i},'camera')">📷 카메라</button>
+      </div>
+      <div id="prev-photo-wrap-${i}" style="display:none;margin-top:6px;position:relative" onclick="event.stopPropagation()">
+        <img id="prev-photo-img-${i}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px">
+        <button onclick="prevPhotoClear(${i})" style="position:absolute;top:5px;right:5px;background:rgba(0,0,0,.55);border:none;border-radius:50%;width:24px;height:24px;color:#fff;font-size:14px;cursor:pointer;line-height:1">×</button>
+      </div>
+    </div>`).join('')
+    +`<div class="preview-actions">
+        <button class="btn-confirm" onclick="confirmPlaces()">선택 항목 추가</button>
+        <button class="btn-discard" onclick="discardPreview('place')">취소</button>
+      </div>`;
+}
+
+function prevPhotoSelect(i, mode){
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='image/*';
+  if(mode==='camera') input.setAttribute('capture','environment');
+  input.onchange=e=>{
+    const file=e.target.files&&e.target.files[0];
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const MAX=1200;
+        let w=img.width,h=img.height;
+        if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+        else if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+        const canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        const data=canvas.toDataURL('image/jpeg',0.82);
+        parsedPlacePhotos[i]=data;
+        document.getElementById('prev-photo-img-'+i).src=data;
+        document.getElementById('prev-photo-wrap-'+i).style.display='block';
+      };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function prevPhotoClear(i){
+  delete parsedPlacePhotos[i];
+  document.getElementById('prev-photo-img-'+i).src='';
+  document.getElementById('prev-photo-wrap-'+i).style.display='none';
+}
+
+function togglePrevSel(id){
+  document.getElementById(id).classList.toggle('selected');
+}
+function confirmPlaces(){
+  const items=parsedPlaces.filter((_,i)=>document.getElementById('prev-p-'+i)?.classList.contains('selected'));
+  if(!items.length){showToast('선택된 항목이 없습니다');return;}
+  // 선택된 항목의 원래 인덱스 기준으로 사진 연결
+  parsedPlaces.forEach((it,i)=>{
+    if(parsedPlacePhotos[i]) it.photo=parsedPlacePhotos[i];
+  });
+  places.push(...items);
+  save(); renderCatFilter(); renderPlaces();
+  discardPreview('place');
+  document.getElementById('place-paste').value='';
+  parsedPlacePhotos={};
+  showToast(items.length+'개 장소 추가됨 ✓');
+}
+function discardPreview(type){
+  document.getElementById(type+'-preview').className='preview-wrap';
+}
+
+/* ═══════════════════════════════════════
+   문장 파서
+   패턴: 한국어 — 中文 (pīnyīn)
+         한국어 : 中文 / pīnyīn
+         ■ 카테고리 제목 인식
+═══════════════════════════════════════ */
+function parsePhraseText(){
+  const raw=document.getElementById('phrase-paste').value.trim();
+  if(!raw){showToast('텍스트를 붙여넣어 주세요');return;}
+
+  const lines=raw.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  const results=[];
+  let currentCatName='기타';
+
+  for(const line of lines){
+    // 카테고리 제목 인식: ■ 제목, # 제목, 【제목】, ▶ 제목 등
+    const catMatch=line.match(/^(?:[■▶▷◆●#【\[])(.+?)(?:[】\]])?[^\S\n]*$/)
+      || line.match(/^(.{2,10})[에서때할]\s*[：:]\s*$/);
+    if(catMatch && !/[\u4e00-\u9fff]/.test(line)){
+      currentCatName=catMatch[1].trim().replace(/[에서때할]$/,'');
+      continue;
+    }
+
+    const phrase=extractPhrase(line, currentCatName);
+    if(phrase) results.push(phrase);
+  }
+
+  if(!results.length){showToast('문장을 인식하지 못했습니다. 예시 형식을 참고하세요');return;}
+  showPhrasePreview(results);
+}
+
+function extractPhrase(line, cat){
+  let ko='', zh='', py='';
+
+  // 공통: 병음은 괄호 안에 있는 경우가 많음
+  // 패턴A: 한국어 — 中文 (병음)
+  // 패턴B: 한국어 : 中文 / 병음
+  // 패턴C: 한국어 - 中文
+  // 패턴D: 中文 (병음) — 한국어  (역순)
+
+  // 먼저 병음 괄호 추출
+  const pyMatch=line.match(/[（(]([A-Za-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ\s,，？！!?～~ǐ\u0300-\u036f]+)[)）]/i);
+  if(pyMatch) py=pyMatch[1].trim();
+
+  // 한자 덩어리 추출
+  const zhMatch=line.match(/[\u4e00-\u9fff\u3400-\u4dbf！？，。、；：""''（）…—～·《》【】\s]{2,}/);
+  if(zhMatch) zh=zhMatch[0].trim().replace(/\s+/g,'');
+
+  // 한국어 부분 (나머지)
+  let rest=line
+    .replace(pyMatch?pyMatch[0]:'','')
+    .replace(zhMatch?zhMatch[0]:'','')
+    .replace(/[（(][^)）]*[)）]/g,'')
+    .replace(/[\-—–:：\/\\|]/g,' ')
+    .replace(/\s+/g,' ').trim();
+
+  // 번호/불릿 제거
+  rest=rest.replace(/^[\d]+[.\)、\s]+/,'').replace(/^[•·▪\-]\s*/,'').trim();
+
+  ko=rest;
+
+  // 유효성 검사
+  if(!zh||zh.length<1) return null;
+  if(!ko||ko.length<1) ko=zh; // 한국어 없으면 한자로 대체
+
+  // 너무 긴 경우 설명문으로 판단
+  if(ko.length>30) return null;
+
+  return {ko, zh, py, cat};
+}
+
+let parsedPhrases=[];
+function showPhrasePreview(items){
+  parsedPhrases=items;
+  const wrap=document.getElementById('phrase-preview');
+  wrap.className='preview-wrap show';
+  wrap.innerHTML=`<div class="preview-title">✦ ${items.length}개 문장 인식됨 — 탭해서 선택/해제</div>`
+    +items.map((it,i)=>`
+    <div class="preview-item selected" id="prev-ph-${i}" onclick="togglePrevSel('prev-ph-${i}')">
+      <div class="preview-item-name" style="font-size:13px;color:var(--text2)">${esc(it.ko)}</div>
+      <div class="preview-item-zh">${esc(it.zh)}</div>
+      ${it.py?`<div class="preview-item-sub" style="font-style:italic">${esc(it.py)}</div>`:''}
+      <div class="preview-item-sub">카테고리: ${esc(it.cat)}</div>
+    </div>`).join('')
+    +`<div class="preview-actions">
+        <button class="btn-confirm" onclick="confirmPhrases()">선택 항목 추가</button>
+        <button class="btn-discard" onclick="discardPreview('phrase')">취소</button>
+      </div>`;
+}
+function confirmPhrases(){
+  const items=parsedPhrases.filter((_,i)=>document.getElementById('prev-ph-'+i)?.classList.contains('selected'));
+  if(!items.length){showToast('선택된 항목이 없습니다');return;}
+  customPhrases.push(...items.map(it=>({...it,custom:true})));
+  save(); renderPhrases();
+  discardPreview('phrase');
+  document.getElementById('phrase-paste').value='';
+  showToast(items.length+'개 문장 추가됨 ✓');
+}
+
+/* ═══════════════════════════════════════
+   장소 렌더
+═══════════════════════════════════════ */
+function getCats(){return['전체',...new Set(places.map(p=>p.cat).filter(Boolean))];}
+function renderCatFilter(){
+  document.getElementById('cat-filter').innerHTML=getCats().map(c=>
+    `<button class="cat-chip${c===currentCat?' active':''}" onclick="setCat('${c}')">${c}</button>`
+  ).join('');
+}
+function setCat(c){currentCat=c;renderCatFilter();renderPlaces();}
+function renderPlaces(){
+  const q=document.getElementById('place-search').value.toLowerCase();
+  let list=places;
+  if(currentCat!=='전체') list=list.filter(p=>p.cat===currentCat);
+  if(q) list=list.filter(p=>(p.name||'').toLowerCase().includes(q)||(p.zh||'').includes(q)||(p.py||p.pinyin||'').toLowerCase().includes(q));
+  document.getElementById('place-count').textContent=list.length+'곳';
+  if(!list.length){
+    document.getElementById('place-list').innerHTML='<div class="empty">장소가 없습니다<br>상단 붙여넣기로 추가하세요</div>';
+    return;
+  }
+  document.getElementById('place-list').innerHTML=list.map(p=>{
+    const idx=places.indexOf(p); const memo=memos[idx]||p.memo||'';
+    const pinyin=p.py||p.pinyin||'';
+    return `<div class="card">
+      <div class="card-header">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span class="card-title">${esc(p.name)}</span>
+            ${p.visited?'<span class="visited-badge">✓ 방문완료</span>':''}
+          </div>
+          ${p.zh?`<div class="card-zh">${esc(p.zh)}</div>`:''}
+          ${pinyin?`<div class="card-pinyin">${esc(pinyin)}</div>`:''}
+          ${p.addr?`<div class="card-addr">📍 ${esc(p.addr)}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;margin-left:8px">
+          <button class="icon-btn" onclick="toggleVisited(${idx})">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <button class="icon-btn" onclick="deletePlace(${idx})">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+        </div>
+      </div>
+      ${p.cat?`<div style="margin-top:4px"><span class="tag">${esc(p.cat)}</span></div>`:''}
+      ${p.link?`<a class="card-link" href="${esc(p.link)}" target="_blank">🔗 링크 ↗</a>`:''}
+      <div class="card-memo">
+        <div class="memo-header"><span class="memo-label">📝 메모</span><button class="memo-save-btn" onclick="saveMemo(${idx})">저장</button></div>
+        <textarea class="memo-textarea" id="memo-${idx}" placeholder="추가 메모...">${esc(memo)}</textarea>
+      </div>
+    </div>`;
+  }).join('');
+}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function saveMemo(idx){memos[idx]=document.getElementById('memo-'+idx).value;save();showToast('저장됨');}
+function toggleVisited(idx){places[idx].visited=!places[idx].visited;save();renderPlaces();}
+function deletePlace(idx){
+  if(!confirm('삭제할까요?'))return;
+  places.splice(idx,1);
+  const nm={};Object.keys(memos).forEach(k=>{const ki=parseInt(k);if(ki<idx)nm[ki]=memos[k];else if(ki>idx)nm[ki-1]=memos[k];});
+  memos=nm;save();renderCatFilter();renderPlaces();
+}
+
+/* ═══════════════════════════════════════
+   문장 렌더
+═══════════════════════════════════════ */
+const PRESET=[
+  {ko:'안녕하세요',zh:'你好',py:'Nǐ hǎo',cat:'기본 인사'},
+  {ko:'감사합니다',zh:'谢谢',py:'Xiè xiè',cat:'기본 인사'},
+  {ko:'죄송합니다',zh:'对不起',py:'Duì bu qǐ',cat:'기본 인사'},
+  {ko:'잠깐만요',zh:'等一下',py:'Děng yī xià',cat:'기본 인사'},
+  {ko:'~에 가고 싶어요',zh:'我想去～',py:'Wǒ xiǎng qù～',cat:'교통'},
+  {ko:'택시 불러주세요',zh:'请帮我叫出租车',py:'Qǐng bāng wǒ jiào chū zū chē',cat:'교통'},
+  {ko:'여기서 내려주세요',zh:'在这里停车',py:'Zài zhè lǐ tíng chē',cat:'교통'},
+  {ko:'지하철역이 어디예요?',zh:'地铁站在哪里？',py:'Dì tiě zhàn zài nǎ lǐ？',cat:'교통'},
+  {ko:'이거 주세요',zh:'我要这个',py:'Wǒ yào zhè gè',cat:'음식'},
+  {ko:'맵지 않게 해주세요',zh:'不要辣',py:'Bú yào là',cat:'음식'},
+  {ko:'계산서 주세요',zh:'买单',py:'Mǎi dān',cat:'음식'},
+  {ko:'포장해 주세요',zh:'打包',py:'Dǎ bāo',cat:'음식'},
+  {ko:'얼마예요?',zh:'多少钱？',py:'Duō shǎo qián？',cat:'쇼핑'},
+  {ko:'깎아주세요',zh:'便宜一点',py:'Pián yi yī diǎn',cat:'쇼핑'},
+  {ko:'카드 결제 되나요?',zh:'可以刷卡吗？',py:'Kě yǐ shuā kǎ ma？',cat:'쇼핑'},
+  {ko:'도와주세요!',zh:'救命！',py:'Jiù mìng！',cat:'긴급'},
+  {ko:'화장실이 어디예요?',zh:'洗手间在哪里？',py:'Xǐ shǒu jiān zài nǎ lǐ？',cat:'긴급'},
+  {ko:'여권을 잃어버렸어요',zh:'我的护照丢了',py:'Wǒ de hù zhào diū le',cat:'긴급'},
+  {ko:'체크인 하고 싶어요',zh:'我想办理入住',py:'Wǒ xiǎng bàn lǐ rù zhù',cat:'숙소'},
+  {ko:'와이파이 비밀번호가 뭐예요?',zh:'WiFi密码是什么？',py:'WiFi mì mǎ shì shén me？',cat:'숙소'},
+  {ko:'회의실이 어디예요?',zh:'会议室在哪里？',py:'Huì yì shì zài nǎ lǐ？',cat:'업무'},
+  {ko:'명함을 드릴게요',zh:'这是我的名片',py:'Zhè shì wǒ de míng piàn',cat:'업무'},
+  {ko:'천천히 말씀해 주세요',zh:'请说慢一点',py:'Qǐng shuō màn yī diǎn',cat:'업무'},
+];
+
+function allPhrases(){return[...PRESET,...customPhrases];}
+
+let phraseFilter='all'; // 'all' | 'star' | 'freq'
+
+function setPhraseFilter(f){
+  phraseFilter=f;
+  ['all','star','freq'].forEach(id=>{
+    document.getElementById('pf-'+id)?.classList.toggle('active', id===f);
+  });
+  renderPhrases();
+}
+
+// 문장 고유키: zh 값 기준
+function phraseKey(p){ return p.zh; }
+
+function toggleStar(zh, e){
+  e.stopPropagation();
+  const k=zh;
+  if(!phraseStat[k]) phraseStat[k]={star:false,count:0};
+  phraseStat[k].star=!phraseStat[k].star;
+  save(); renderPhrases();
+}
+
+function renderPhrases(){
+  const q=document.getElementById('phrase-search').value.toLowerCase();
+  let list=allPhrases();
+  if(q) list=list.filter(p=>p.ko.includes(q)||p.zh.includes(q)||(p.py||'').toLowerCase().includes(q));
+
+  // 필터 적용
+  if(phraseFilter==='star'){
+    list=list.filter(p=>phraseStat[phraseKey(p)]?.star);
+    if(!list.length){
+      document.getElementById('phrase-list').innerHTML='<div class="empty">즐겨찾기한 문장이 없습니다<br>★ 버튼으로 추가하세요</div>';
+      return;
+    }
+  } else if(phraseFilter==='freq'){
+    list=list.filter(p=>(phraseStat[phraseKey(p)]?.count||0)>0);
+    list.sort((a,b)=>(phraseStat[phraseKey(b)]?.count||0)-(phraseStat[phraseKey(a)]?.count||0));
+    if(!list.length){
+      document.getElementById('phrase-list').innerHTML='<div class="empty">아직 사용 기록이 없습니다<br>문장을 탭하면 횟수가 쌓입니다</div>';
+      return;
+    }
+    // 자주 쓴 순은 카테고리 구분 없이 랭킹으로 표시
+    document.getElementById('phrase-list').innerHTML=
+      '<div class="phrase-cat">🔥 자주 쓴 순</div>'+
+      list.map(p=>renderPhraseCard(p)).join('');
+    return;
+  }
+
+  // 일반 카테고리별 표시
+  const cats=[...new Set(list.map(p=>p.cat))];
+  document.getElementById('phrase-list').innerHTML=
+    cats.map(cat=>{
+      const items=list.filter(p=>p.cat===cat);
+      return`<div class="phrase-cat">${cat}</div>`+items.map(p=>renderPhraseCard(p)).join('');
+    }).join('')||'<div class="empty">검색 결과가 없습니다</div>';
+}
+
+function renderPhraseCard(p){
+  const k=phraseKey(p);
+  const stat=phraseStat[k]||{star:false,count:0};
+  const starIcon=stat.star?'⭐':'☆';
+  const countBadge=stat.count>0
+    ?`<span class="use-count${stat.count>=5?' hot':''}">${stat.count}회</span>`
+    :'';
+  const zhSafe=p.zh.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+  return`<div class="phrase-card">
+    <div style="display:flex;align-items:flex-start;gap:6px">
+      <div style="flex:1;cursor:pointer" onclick="copyZh('${zhSafe}')">
+        <div class="phrase-ko">${esc(p.ko)}${countBadge}${p.custom?'<span class="custom-badge" style="margin-left:5px">추가됨</span>':''}</div>
+        <div class="phrase-zh">${esc(p.zh)}</div>
+        ${p.py?`<div class="phrase-pinyin">${esc(p.py)}</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:2px">
+        <button class="star-btn" onclick="toggleStar('${zhSafe}',event)" title="즐겨찾기">${starIcon}</button>
+        ${p.custom?`<button class="icon-btn" onclick="event.stopPropagation();deletePhrase('${zhSafe}')">
+          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        </button>`:''}
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:5px">탭하면 중국어 복사</div>
+  </div>`;
+}
+
+function deletePhrase(zh){
+  if(!confirm('삭제할까요?'))return;
+  customPhrases=customPhrases.filter(p=>p.zh!==zh);
+  save();renderPhrases();
+}
+function copyZh(t){
+  // 사용횟수 +1
+  if(!phraseStat[t]) phraseStat[t]={star:false,count:0};
+  phraseStat[t].count++;
+  save();
+  if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>showToast('복사됨 ✓'));
+  else{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');document.body.removeChild(a);showToast('복사됨 ✓');}
+  renderPhrases();
+}
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1900);}
+
+/* ═══════════════════════════════════════
+   경비 정산
+═══════════════════════════════════════ */
+
+// 날짜 기본값 오늘로
+function initDateInput(){
+  const el=document.getElementById('ex-date');
+  if(el&&!el.value) el.value=new Date().toISOString().slice(0,10);
+}
+
+// 위안 입력 시 원화 실시간 미리보기
+function previewKrw(){
+  const cny=parseFloat(document.getElementById('ex-cny').value)||0;
+  const krw=Math.round(cny*CNY_RATE);
+  const el=document.getElementById('cny-preview');
+  el.textContent=cny>0?`= ₩${krw.toLocaleString()}원 (환율 ¥1 = ₩${CNY_RATE})`:'';
+}
+
+// 환율 수정
+function editRate(){
+  const v=prompt('적용 환율 입력 (¥1 = ₩?)',CNY_RATE);
+  if(v&&!isNaN(v)&&parseFloat(v)>0){
+    CNY_RATE=parseFloat(v);
+    save(); renderExpSummary(); renderExpenses();
+    showToast('환율 변경: ¥1 = ₩'+CNY_RATE);
+  }
+}
+
+function addExpense(){
+  const date=document.getElementById('ex-date').value;
+  const cny=parseFloat(document.getElementById('ex-cny').value);
+  const cat=document.getElementById('ex-cat').value.trim()||'기타';
+  const memo=document.getElementById('ex-memo').value.trim();
+  if(!date){showToast('날짜를 선택하세요');return;}
+  if(!cny||cny<=0){showToast('금액을 입력하세요');return;}
+  expenses.push({date, cny, krw:Math.round(cny*CNY_RATE), cat, memo, rate:CNY_RATE});
+  // 날짜순 정렬
+  expenses.sort((a,b)=>a.date.localeCompare(b.date));
+  save();
+  document.getElementById('ex-cny').value='';
+  document.getElementById('ex-memo').value='';
+  document.getElementById('cny-preview').textContent='';
+  renderExpSummary(); renderExpCatFilter(); renderExpenses();
+  showToast('지출 추가됨 ✓');
+}
+
+function deleteExpense(idx){
+  if(!confirm('삭제할까요?'))return;
+  expenses.splice(idx,1);
+  save(); renderExpSummary(); renderExpCatFilter(); renderExpenses();
+}
+
+function getExpCats(){return['전체',...new Set(expenses.map(e=>e.cat).filter(Boolean))];}
+
+function renderExpCatFilter(){
+  document.getElementById('exp-cat-filter').innerHTML=getExpCats().map(c=>
+    `<button class="cat-chip${c===expCat?' active':''}" onclick="setExpCat('${c}')">${c}</button>`
+  ).join('');
+}
+function setExpCat(c){expCat=c;renderExpCatFilter();renderExpenses();}
+
+function renderExpSummary(){
+  const totalCny=expenses.reduce((s,e)=>s+e.cny,0);
+  const totalKrw=expenses.reduce((s,e)=>s+e.krw,0);
+  // 카테고리별 합계
+  const catMap={};
+  expenses.forEach(e=>{catMap[e.cat]=(catMap[e.cat]||0)+e.cny;});
+  const catRows=Object.entries(catMap).map(([c,v])=>
+    `<div class="summary-row"><span class="summary-label">${esc(c)}</span><span class="summary-val" style="font-size:13px">¥${v.toLocaleString()}</span></div>`
+  ).join('');
+  document.getElementById('exp-summary').innerHTML=
+    `<div class="summary-row">
+      <span class="summary-label">총 지출 (위안)</span>
+      <span class="summary-val accent">¥${totalCny.toLocaleString()}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">총 지출 (원화)</span>
+      <span class="summary-val green">₩${totalKrw.toLocaleString()}</span>
+    </div>
+    ${catRows}
+    <div class="summary-row">
+      <span class="summary-label" style="font-size:11px">적용 환율: ¥1 = ₩${CNY_RATE}</span>
+      <button class="rate-edit" onclick="editRate()">변경</button>
+    </div>`;
+}
+
+function renderExpenses(){
+  let list=expenses;
+  if(expCat!=='전체') list=list.filter(e=>e.cat===expCat);
+  if(!list.length){
+    document.getElementById('expense-list').innerHTML='<div class="empty">지출 내역이 없습니다</div>';
+    return;
+  }
+  document.getElementById('expense-list').innerHTML=list.map((e,li)=>{
+    const idx=expenses.indexOf(e);
+    return`<div class="exp-card">
+      <div class="exp-card-left">
+        <div class="exp-date">${e.date}</div>
+        <span class="exp-cat-badge">${esc(e.cat)}</span>
+        <div class="exp-memo">${esc(e.memo)||'—'}</div>
+      </div>
+      <div class="exp-card-right">
+        <div class="exp-cny">¥${e.cny.toLocaleString()}</div>
+        <div class="exp-krw">₩${e.krw.toLocaleString()}</div>
+      </div>
+      <button class="icon-btn" style="flex-shrink:0" onclick="deleteExpense(${idx})">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════
+   엑셀(.xlsx) 내보내기 — 순수 JS, 외부 라이브러리 없음
+   Office Open XML 최소 구조를 직접 생성 → ZIP(base64) → 다운로드
+═══════════════════════════════════════ */
+function exportExcel(){
+  if(!expenses.length){showToast('지출 내역이 없습니다');return;}
+  try{
+    buildXlsx();
+  } catch(e){
+    console.error('xlsx 생성 오류:', e);
+    exportCsv(); // 실패 시 CSV fallback
+  }
+}
+
+/* CSV fallback */
+function exportCsv(){
+  const BOM='\uFEFF';
+  const header='날짜,카테고리,메모,금액(위안),금액(원화),적용환율\n';
+  const rows=expenses.map(e=>
+    [e.date, e.cat, '"'+(e.memo||'').replace(/"/g,'""')+'"', e.cny, e.krw, e.rate].join(',')
+  ).join('\n');
+  const totalCny=expenses.reduce((s,e)=>s+e.cny,0);
+  const totalKrw=expenses.reduce((s,e)=>s+e.krw,0);
+  const footer=`\n합계,,,${totalCny},${totalKrw},`;
+  const blob=new Blob([BOM+header+rows+footer],{type:'text/csv;charset=utf-8;'});
+  triggerDownload(URL.createObjectURL(blob),'중국출장_경비정산.csv');
+  showToast('CSV 다운로드 완료 ✓');
+}
+
+function triggerDownload(url, filename){
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=filename;
+  a.style.display='none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 500);
+}
+
+/* ── 순수 JS xlsx 빌더 ── */
+function buildXlsx(){
+  // 데이터 행 구성
+  const headers=['날짜','카테고리','메모','금액(위안)','금액(원화)','적용환율'];
+  const rows=expenses.map(e=>[e.date||'', e.cat||'', e.memo||'', e.cny, e.krw, e.rate]);
+  const totalCny=expenses.reduce((s,e)=>s+e.cny,0);
+  const totalKrw=expenses.reduce((s,e)=>s+e.krw,0);
+  const allRows=[headers, ...rows, [], ['합계','','',totalCny,totalKrw,'']];
+
+  // 공유 문자열 테이블
+  const sharedStrings=[];
+  const ssMap={};
+  function getSS(v){
+    const s=String(v);
+    if(ssMap[s]===undefined){ssMap[s]=sharedStrings.length;sharedStrings.push(s);}
+    return ssMap[s];
+  }
+
+  // 셀 XML 생성
+  const colLetters=['A','B','C','D','E','F'];
+  let sheetRows='';
+  allRows.forEach((row,ri)=>{
+    if(!row.length){sheetRows+=`<row r="${ri+1}"/>`;return;}
+    let cells='';
+    row.forEach((v,ci)=>{
+      const addr=colLetters[ci]+(ri+1);
+      if(v===''||v===undefined||v===null){return;}
+      if(typeof v==='number'){
+        cells+=`<c r="${addr}" t="n"><v>${v}</v></c>`;
+      } else {
+        cells+=`<c r="${addr}" t="s"><v>${getSS(v)}</v></c>`;
+      }
+    });
+    sheetRows+=`<row r="${ri+1}">${cells}</row>`;
+  });
+
+  // XML 파일들
+  const sheetXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <sheetData>${sheetRows}</sheetData>
+</worksheet>`;
+
+  const ssXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${sharedStrings.length}" uniqueCount="${sharedStrings.length}">
+${sharedStrings.map(s=>`<si><t xml:space="preserve">${xmlEsc(s)}</t></si>`).join('')}
+</sst>`;
+
+  const wbXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets><sheet name="경비정산" sheetId="1" r:id="rId1"/></sheets>
+</workbook>`;
+
+  const wbRels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>
+</Relationships>`;
+
+  const rootRels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+
+  const contentTypes=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
+</Types>`;
+
+  // ZIP 조립 (Deflate 없이 Store 방식 — 순수 JS)
+  const files=[
+    {name:'[Content_Types].xml',       data:contentTypes},
+    {name:'_rels/.rels',               data:rootRels},
+    {name:'xl/workbook.xml',           data:wbXml},
+    {name:'xl/_rels/workbook.xml.rels',data:wbRels},
+    {name:'xl/worksheets/sheet1.xml',  data:sheetXml},
+    {name:'xl/sharedStrings.xml',      data:ssXml},
+  ];
+
+  const zipBytes=makeZip(files);
+  const blob=new Blob([zipBytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  triggerDownload(URL.createObjectURL(blob),'중국출장_경비정산.xlsx');
+  showToast('엑셀 다운로드 완료 ✓');
+}
+
+function xmlEsc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+}
+
+/* ── 최소 ZIP 구현 (Store, no compression) ── */
+function makeZip(files){
+  const enc=new TextEncoder();
+  const entries=[];
+  let offset=0;
+
+  files.forEach(f=>{
+    const nameBytes=enc.encode(f.name);
+    const dataBytes=enc.encode(f.data);
+    const crc=crc32(dataBytes);
+    const localHeader=makeLocalHeader(nameBytes,dataBytes.length,crc);
+    entries.push({nameBytes,dataBytes,localHeader,offset,crc});
+    offset+=localHeader.length+dataBytes.length;
+  });
+
+  // Central directory
+  const cdParts=[];
+  entries.forEach(e=>{
+    cdParts.push(makeCentralDir(e.nameBytes,e.dataBytes.length,e.crc,e.offset));
+  });
+  const cdBytes=concatU8(cdParts);
+  const eocd=makeEOCD(entries.length,cdBytes.length,offset);
+
+  const parts=[...entries.flatMap(e=>[e.localHeader,e.dataBytes]),cdBytes,eocd];
+  return concatU8(parts);
+}
+
+function u32le(n){return new Uint8Array([n&0xff,(n>>8)&0xff,(n>>16)&0xff,(n>>24)&0xff]);}
+function u16le(n){return new Uint8Array([n&0xff,(n>>8)&0xff]);}
+
+function makeLocalHeader(nameBytes,size,crc){
+  const a=[
+    new Uint8Array([0x50,0x4b,0x03,0x04]), // signature
+    u16le(20),       // version needed
+    u16le(0),        // flags
+    u16le(0),        // compression: store
+    u16le(0),u16le(0), // mod time/date
+    u32le(crc),
+    u32le(size),     // compressed
+    u32le(size),     // uncompressed
+    u16le(nameBytes.length),
+    u16le(0),        // extra length
+    nameBytes,
+  ];
+  return concatU8(a);
+}
+
+function makeCentralDir(nameBytes,size,crc,offset){
+  const a=[
+    new Uint8Array([0x50,0x4b,0x01,0x02]),
+    u16le(20),u16le(20),
+    u16le(0),u16le(0),
+    u16le(0),u16le(0),
+    u32le(crc),
+    u32le(size),u32le(size),
+    u16le(nameBytes.length),
+    u16le(0),u16le(0),u16le(0),u16le(0),
+    u32le(0),
+    u32le(offset),
+    nameBytes,
+  ];
+  return concatU8(a);
+}
+
+function makeEOCD(count,cdSize,cdOffset){
+  return concatU8([
+    new Uint8Array([0x50,0x4b,0x05,0x06]),
+    u16le(0),u16le(0),
+    u16le(count),u16le(count),
+    u32le(cdSize),
+    u32le(cdOffset),
+    u16le(0),
+  ]);
+}
+
+function concatU8(arrays){
+  const total=arrays.reduce((s,a)=>s+a.length,0);
+  const out=new Uint8Array(total);
+  let i=0;
+  arrays.forEach(a=>{out.set(a,i);i+=a.length;});
+  return out;
+}
+
+function crc32(buf){
+  let c=0xffffffff;
+  if(!crc32.table){
+    crc32.table=new Uint32Array(256);
+    for(let i=0;i<256;i++){
+      let v=i;
+      for(let j=0;j<8;j++) v=v&1?(v>>>1)^0xedb88320:(v>>>1);
+      crc32.table[i]=v;
+    }
+  }
+  for(let i=0;i<buf.length;i++) c=crc32.table[(c^buf[i])&0xff]^(c>>>8);
+  return (c^0xffffffff)>>>0;
+}
+
+load();renderCatFilter();renderPlaces();renderPhrases();
+initDateInput();renderExpSummary();renderExpCatFilter();renderExpenses();
+initDiaryDate();renderDiary();
+
+/* ═══════════════════════════════════════
+   일기
+═══════════════════════════════════════ */
+let replacingIdx = null; // 사진 교체 대상 인덱스
+
+function initDiaryDate(){
+  const el=document.getElementById('diary-date');
+  if(el&&!el.value) el.value=new Date().toISOString().slice(0,10);
+}
+
+// 사진 선택 → 미리보기
+function onDiaryFileSelect(e){
+  const files=[...e.target.files];
+  if(!files.length) return;
+  // 여러 장 선택 시 첫 번째만 미리보기, 나머지는 자동 추가
+  const first=files[0];
+  readAsDataURL(first, src=>{
+    const prev=document.getElementById('diary-new-preview');
+    prev.src=src; prev.style.display='block';
+    prev._allFiles=files; // 전체 파일 보관
+  });
+  e.target.value='';
+}
+
+function readAsDataURL(file, cb){
+  // 이미지 리사이즈 (최대 1200px, 품질 0.82) — 용량 절감
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=1200;
+      let w=img.width, h=img.height;
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      else if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+      const canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      cb(canvas.toDataURL('image/jpeg',0.82));
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function addDiaryEntry(){
+  const date=document.getElementById('diary-date').value;
+  const location=document.getElementById('diary-location').value.trim();
+  const comment=document.getElementById('diary-comment').value.trim();
+  const prev=document.getElementById('diary-new-preview');
+  const imgSrc=prev.style.display!=='none'&&prev.src?prev.src:'';
+
+  if(!comment&&!imgSrc){showToast('사진 또는 코멘트를 입력하세요');return;}
+
+  const allFiles=prev._allFiles||[];
+
+  const doAdd=(src, isLast)=>{
+    diaryEntries.push({
+      id: Date.now()+'_'+Math.random().toString(36).slice(2,6),
+      date: date||new Date().toISOString().slice(0,10),
+      location,
+      comment: (isLast||allFiles.length<=1)?comment:'',
+      img: src,
+      createdAt: new Date().toISOString()
+    });
+  };
+
+  if(allFiles.length>1){
+    // 여러 장: 순차 처리
+    let done=0;
+    allFiles.forEach((f,i)=>{
+      readAsDataURL(f, src=>{
+        doAdd(src, i===allFiles.length-1);
+        done++;
+        if(done===allFiles.length){
+          // 마지막 항목에 코멘트
+          diaryEntries[diaryEntries.length-1].comment=comment;
+          finishAdd();
+        }
+      });
+    });
+  } else {
+    doAdd(imgSrc, true);
+    finishAdd();
+  }
+}
+
+function finishAdd(){
+  // 날짜순 정렬
+  diaryEntries.sort((a,b)=>a.date.localeCompare(b.date)||a.createdAt.localeCompare(b.createdAt));
+  saveDiary();
+  // 폼 초기화
+  document.getElementById('diary-comment').value='';
+  document.getElementById('diary-location').value='';
+  const prev=document.getElementById('diary-new-preview');
+  prev.src=''; prev.style.display='none'; prev._allFiles=[];
+  renderDiary();
+  showToast('기록 추가됨 ✓');
+}
+
+// 사진 교체
+function replacePhoto(idx){
+  replacingIdx=idx;
+  document.getElementById('diary-replace-input').click();
+}
+function onDiaryReplace(e){
+  const f=e.target.files[0];
+  if(!f||replacingIdx===null) return;
+  const idx=replacingIdx;
+  readAsDataURL(f, src=>{
+    diaryEntries[idx].img=src;
+    saveDiary(); renderDiary();
+    showToast('사진 교체됨 ✓');
+  });
+  replacingIdx=null;
+  e.target.value='';
+}
+
+// 코멘트 저장
+function saveDiaryComment(idx){
+  const ta=document.getElementById('dc-'+idx);
+  if(!ta) return;
+  diaryEntries[idx].comment=ta.value;
+  saveDiary();
+  showToast('저장됨 ✓');
+}
+
+// 삭제
+function deleteDiaryEntry(idx){
+  if(!confirm('이 기록을 삭제할까요?')) return;
+  diaryEntries.splice(idx,1);
+  saveDiary(); renderDiary();
+}
+
+// 사진 전체화면
+function openViewer(src){
+  document.getElementById('viewer-img').src=src;
+  document.getElementById('photo-viewer').classList.add('open');
+}
+function closeViewer(){
+  document.getElementById('photo-viewer').classList.remove('open');
+  document.getElementById('viewer-img').src='';
+}
+
+// 렌더
+function renderDiary(){
+  if(!diaryEntries.length){
+    document.getElementById('diary-list').innerHTML='<div class="empty">기록이 없습니다<br>사진과 코멘트를 추가해보세요</div>';
+    return;
+  }
+  // 날짜별 그룹핑
+  const groups={};
+  diaryEntries.forEach((d,i)=>{
+    const k=d.date||'날짜 없음';
+    if(!groups[k]) groups[k]=[];
+    groups[k].push({...d, _idx:i});
+  });
+
+  document.getElementById('diary-list').innerHTML=Object.entries(groups).map(([date,items])=>`
+    <div class="diary-date-hd">${formatDate(date)}</div>
+    ${items.map(d=>{
+      const i=d._idx;
+      return`<div class="diary-card">
+        <div class="diary-photo-wrap">
+          ${d.img
+            ?`<img class="diary-photo" src="${d.img}" alt="" onclick="openViewer('${d.img.replace(/'/g,"\\'")}')">
+               <button class="diary-photo-add" onclick="replacePhoto(${i})">사진 교체</button>`
+            :`<div class="diary-no-photo">
+                <button style="background:none;border:1px dashed var(--text3);border-radius:8px;padding:8px 16px;color:var(--text3);cursor:pointer;font-family:var(--font);font-size:12px" onclick="replacePhoto(${i})">+ 사진 추가</button>
+              </div>`
+          }
+        </div>
+        <div class="diary-body">
+          <div class="diary-meta">
+            <span class="diary-time">${formatTime(d.createdAt)}</span>
+            ${d.location?`<span class="diary-location">📍 ${esc(d.location)}</span>`:''}
+          </div>
+          <textarea class="diary-comment" id="dc-${i}" placeholder="코멘트를 입력하세요...">${esc(d.comment||'')}</textarea>
+          <div class="diary-footer">
+            <button class="diary-save-btn" onclick="saveDiaryComment(${i})">저장</button>
+            <button class="diary-del-btn" onclick="deleteDiaryEntry(${i})">
+              <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>삭제
+            </button>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+  `).join('');
+}
+
+function formatDate(d){
+  if(!d||d==='날짜 없음') return d;
+  try{
+    const dt=new Date(d);
+    return dt.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  }catch(e){return d;}
+}
+function formatTime(iso){
+  if(!iso) return '';
+  try{
+    const dt=new Date(iso);
+    return dt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){return '';}
+}
+
+// TXT 내보내기 (이미지 제외, 줄글만)
+function exportDiaryTxt(){
+  if(!diaryEntries.length){showToast('기록이 없습니다');return;}
+
+  const groups={};
+  diaryEntries.forEach(d=>{
+    const k=d.date||'날짜 없음';
+    if(!groups[k]) groups[k]=[];
+    groups[k].push(d);
+  });
+
+  let txt='═══════════════════════════\n';
+  txt+='    上海, Love\n';
+  txt+='═══════════════════════════\n\n';
+
+  Object.entries(groups).forEach(([date,items])=>{
+    txt+=`【 ${formatDate(date)} 】\n`;
+    txt+='─────────────────\n';
+    items.forEach(d=>{
+      const time=formatTime(d.createdAt);
+      if(d.location) txt+=`📍 ${d.location}`;
+      if(time) txt+=(d.location?' · ':'')+time;
+      if(d.location||time) txt+='\n';
+      if(d.comment) txt+=d.comment+'\n';
+      txt+='\n';
+    });
+  });
+
+  const totalDays=Object.keys(groups).length;
+  const totalEntries=diaryEntries.length;
+  txt+=`─────────────────\n총 ${totalDays}일 · ${totalEntries}개 기록\n`;
+
+  const blob=new Blob(['\uFEFF'+txt],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='중국출장_일기.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('TXT 다운로드 완료 ✓');
+}
+
+/* ── PDF 사진첩 ── */
+let currentPdfTheme = 'vintage';
+
+function setPdfTheme(theme){
+  currentPdfTheme = theme;
+  // 칩 active 토글
+  document.querySelectorAll('.pdf-theme-chip').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tc-'+theme).classList.add('active');
+  // 오버레이 테마 클래스 교체
+  const ov=document.getElementById('pdf-overlay');
+  ov.className=ov.className.replace(/theme-\w+/,'');
+  ov.classList.add('open','theme-'+theme);
+  // 콘텐츠 재생성 (레이아웃이 테마마다 달라질 수 있으므로)
+  buildPdfContent(theme);
+}
+
+function openPdfPreview(){
+  if(!diaryEntries.length){showToast('기록이 없습니다');return;}
+  const ov=document.getElementById('pdf-overlay');
+  ov.className='';
+  ov.classList.add('open','theme-'+currentPdfTheme);
+  buildPdfContent(currentPdfTheme);
+  ov.scrollTop=0;
+}
+
+function buildPdfContent(theme){
+  const groups={};
+  [...diaryEntries].forEach(d=>{
+    const k=d.date||'날짜 없음';
+    if(!groups[k]) groups[k]=[];
+    groups[k].push(d);
+  });
+
+  // 출장 날짜 범위
+  const dates=Object.keys(groups).filter(d=>d!=='날짜 없음').sort();
+  const rangeText=dates.length
+    ? (dates.length===1 ? dates[0] : dates[0]+' – '+dates[dates.length-1])
+    : '중국 출장';
+  const totalDays=dates.length;
+  const totalShots=diaryEntries.filter(d=>d.img).length;
+
+  // 표지 장식 SVG (테마별)
+  const coverDecoMap={
+    vintage: `<svg width="100%" height="100%" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <rect width="400" height="260" fill="#3d2b1f"/>
+      <circle cx="30" cy="30" r="80" fill="rgba(200,160,100,.08)"/>
+      <circle cx="380" cy="240" r="100" fill="rgba(200,160,100,.06)"/>
+      <rect x="16" y="16" width="368" height="228" rx="2" fill="none" stroke="rgba(200,160,100,.3)" stroke-width="1"/>
+      <rect x="22" y="22" width="356" height="216" rx="1" fill="none" stroke="rgba(200,160,100,.15)" stroke-width="1"/>
+    </svg>`,
+    modern: `<svg width="100%" height="100%" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <rect width="400" height="260" fill="#0a0a10"/>
+      <line x1="0" y1="0" x2="400" y2="260" stroke="rgba(232,184,109,.06)" stroke-width="80"/>
+      <line x1="400" y1="0" x2="0" y2="260" stroke="rgba(232,184,109,.04)" stroke-width="60"/>
+      <rect x="0" y="220" width="400" height="4" fill="rgba(232,184,109,.5)"/>
+    </svg>`,
+    minimal: `<svg width="100%" height="100%" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <rect width="400" height="260" fill="#f5f5f5"/>
+      <rect x="0" y="240" width="400" height="3" fill="#111"/>
+      <line x1="24" y1="24" x2="376" y2="24" stroke="#111" stroke-width="1"/>
+    </svg>`,
+    travel: `<svg width="100%" height="100%" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#8e1a13"/></linearGradient></defs>
+      <rect width="400" height="260" fill="url(%23tg)"/>
+      <circle cx="320" cy="60" r="130" fill="rgba(255,255,255,.04)"/>
+      <circle cx="80" cy="200" r="90" fill="rgba(255,255,255,.03)"/>
+      <path d="M0 200 Q100 160 200 200 Q300 240 400 200 L400 260 L0 260Z" fill="rgba(0,0,0,.15)"/>
+    </svg>`,
+  };
+  const coverTextColor={vintage:'#f5e6c8',modern:'#e8b86d',minimal:'#111',travel:'#fff'};
+
+  let html=`<div class="pdf-page">`;
+
+  // ── 표지 ──
+  html+=`<div class="pdf-cover">
+    <div class="pdf-cover-deco">${coverDecoMap[theme]||''}</div>
+    <div class="pdf-cover-title" style="color:${coverTextColor[theme]}">上海, Love</div>
+    <div class="pdf-cover-sub" style="color:${coverTextColor[theme]}">${rangeText} · ${totalDays}일 · 사진 ${totalShots}장</div>
+  </div>`;
+
+  // ── 날짜별 본문 ── (지그재그: 사진 있는 항목 기준으로 좌/우 번갈아)
+  let zigzagIdx = 0; // 사진 있는 항목 전역 카운터 (날짜 구분 없이 연속)
+
+  Object.entries(groups).forEach(([date, items])=>{
+    html+=`<div class="pdf-day-block">
+      <div class="pdf-day-label">${formatDate(date)}</div>`;
+
+    items.forEach(d=>{
+      const meta=[d.location?'📍 '+d.location:'', formatTime(d.createdAt)].filter(Boolean).join('  ');
+      const commentHtml=esc(d.comment||'').replace(/\n/g,'<br>');
+
+      if(d.img){
+        const isLeft = (zigzagIdx % 2 === 0); // 짝수 = 사진 왼쪽, 홀수 = 사진 오른쪽
+        zigzagIdx++;
+
+        if(isLeft){
+          // 사진 왼쪽 / 텍스트 오른쪽
+          html+=`<div class="pdf-entry">
+            <div class="pdf-entry-side pdf-side-left">
+              <div class="pdf-entry-side-img"><img src="${d.img}" alt=""></div>
+              <div class="pdf-entry-side-body">
+                ${meta?`<div class="pdf-entry-meta">${meta}</div>`:''}
+                <div class="pdf-entry-comment">${commentHtml||'&nbsp;'}</div>
+              </div>
+            </div>
+          </div>`;
+        } else {
+          // 사진 오른쪽 / 텍스트 왼쪽
+          html+=`<div class="pdf-entry">
+            <div class="pdf-entry-side pdf-side-right">
+              <div class="pdf-entry-side-body">
+                ${meta?`<div class="pdf-entry-meta">${meta}</div>`:''}
+                <div class="pdf-entry-comment">${commentHtml||'&nbsp;'}</div>
+              </div>
+              <div class="pdf-entry-side-img"><img src="${d.img}" alt=""></div>
+            </div>
+          </div>`;
+        }
+      } else {
+        // 사진 없는 항목 — 텍스트만, 들여쓰기로 구분
+        html+=`<div class="pdf-entry pdf-entry-text-only">
+          <div class="pdf-entry-caption">
+            ${meta?`<div class="pdf-entry-meta">${meta}</div>`:''}
+            <div class="pdf-entry-comment">${commentHtml||'&nbsp;'}</div>
+          </div>
+        </div>`;
+      }
+    });
+    html+=`</div>`; // pdf-day-block
+  });
+
+  html+=`<div class="pdf-footer-bar">上海, Love · ${rangeText} · 총 ${diaryEntries.length}개 기록</div>`;
+  html+=`</div>`; // pdf-page
+
+  document.getElementById('pdf-body').innerHTML=html;
+}
+
+function closePdfPreview(){
+  document.getElementById('pdf-overlay').classList.remove('open');
+}
+
+/* ═══════════════════════════════════════
+   최종 통합 추가 스크립트
+═══════════════════════════════════════ */
+
+// 로딩 닫기
+/* ═══════════════════════════════════════
+   장소 TXT / PDF 내보내기
+═══════════════════════════════════════ */
+function exportPlacesTxt(){
+  if(!places.length){showToast('장소가 없습니다');return;}
+  let txt='═══════════════════════════\n';
+  txt+='    上海, Love — 장소 목록\n';
+  txt+='═══════════════════════════\n\n';
+  places.forEach((p,i)=>{
+    txt+=`${i+1}. ${p.name||''}`;
+    if(p.zh) txt+=` (${p.zh}${p.py?' · '+p.py:''})`;
+    txt+='\n';
+    if(p.cat) txt+=`   카테고리: ${p.cat}\n`;
+    if(p.addr) txt+=`   주소: ${p.addr}\n`;
+    const memo=memos[i]||p.memo||'';
+    if(memo) txt+=`   메모: ${memo}\n`;
+    if(p.visited) txt+=`   ✓ 방문 완료\n`;
+    txt+='\n';
+  });
+  txt+=`총 ${places.length}곳`;
+  const blob=new Blob(['\uFEFF'+txt],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='상하이_장소목록.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('TXT 다운로드 완료 ✓');
+}
+
+function exportPlacesPdf(){
+  if(!places.length){showToast('장소가 없습니다');return;}
+  const ov=document.getElementById('pdf-overlay');
+  ov.className='';
+  ov.classList.add('open','theme-vintage');
+  // 장소 목록 PDF 콘텐츠 생성
+  let html='<div class="pdf-page">';
+  html+=`<div class="pdf-cover">
+    <div class="pdf-cover-deco"><svg width="100%" height="100%" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="260" fill="#3d2b1f"/><circle cx="30" cy="30" r="80" fill="rgba(200,160,100,.08)"/><circle cx="380" cy="240" r="100" fill="rgba(200,160,100,.06)"/><rect x="16" y="16" width="368" height="228" rx="2" fill="none" stroke="rgba(200,160,100,.3)" stroke-width="1"/></svg></div>
+    <div class="pdf-cover-title" style="color:#f5e6c8">上海, Love</div>
+    <div class="pdf-cover-sub" style="color:#f5e6c8">장소 목록 · 총 ${places.length}곳</div>
+  </div>`;
+  html+='<div class="pdf-day-block"><div class="pdf-day-label">장소 목록</div>';
+  places.forEach((p,i)=>{
+    const memo=memos[i]||p.memo||'';
+    html+=`<div class="pdf-entry pdf-entry-text-only">
+      <div class="pdf-entry-caption">
+        <div class="pdf-entry-meta">${i+1}. ${p.cat||''} ${p.visited?'✓ 방문완료':''}</div>
+        <div class="pdf-entry-comment" style="font-size:16px;font-weight:700">${esc(p.name||'')}${p.zh?` <span style="font-size:14px;color:#888">${esc(p.zh)}</span>`:''}</div>
+        ${p.py?`<div class="pdf-entry-meta" style="font-style:italic">${esc(p.py)}</div>`:''}
+        ${p.addr?`<div class="pdf-entry-meta">📍 ${esc(p.addr)}</div>`:''}
+        ${memo?`<div class="pdf-entry-comment" style="font-size:12px;margin-top:4px">${esc(memo)}</div>`:''}
+        ${p.photo?`<img src="${p.photo}" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-top:8px">`:''}
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+  html+=`<div class="pdf-footer-bar">上海, Love · 장소 목록 · 총 ${places.length}곳</div>`;
+  html+='</div>';
+  document.getElementById('pdf-body').innerHTML=html;
+  document.querySelectorAll('.pdf-theme-chip').forEach(c=>c.classList.remove('active'));
+  const chip=document.getElementById('tc-vintage');
+  if(chip) chip.classList.add('active');
+  ov.scrollTop=0;
+}
+
+/* ═══════════════════════════════════════
+   장소 직접 추가 폼
+═══════════════════════════════════════ */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const splash = document.getElementById('app-splash');
+    if (splash) splash.classList.add('hide');
+  }, 1200);
+});
+
+// 경비 사진
+let currentExpensePhoto = '';
+
+function resizeImageFile(file, maxSize = 1200, quality = 0.78) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width, height = img.height;
+        if (width > height && width > maxSize) {
+          height = Math.round(height * maxSize / width);
+          width = maxSize;
+        } else if (height >= width && height > maxSize) {
+          width = Math.round(width * maxSize / height);
+          height = maxSize;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function onExpensePhotoSelect(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  try {
+    currentExpensePhoto = await resizeImageFile(file);
+    document.getElementById('ex-photo-img').src = currentExpensePhoto;
+    document.getElementById('ex-photo-preview').classList.add('show');
+  } catch (e) {
+    alert('사진을 불러오지 못했습니다.');
+  }
+  event.target.value = '';
+}
+
+function clearExpensePhoto() {
+  currentExpensePhoto = '';
+  const img = document.getElementById('ex-photo-img');
+  const wrap = document.getElementById('ex-photo-preview');
+  if (img) img.src = '';
+  if (wrap) wrap.classList.remove('show');
+}
+
+function openExpensePhotoViewer(src) {
+  const viewer = document.getElementById('expense-photo-viewer');
+  const img = document.getElementById('expense-viewer-img');
+  if (!viewer || !img) return;
+  img.src = src;
+  viewer.classList.add('open');
+}
+
+function closeExpensePhotoViewer() {
+  const viewer = document.getElementById('expense-photo-viewer');
+  const img = document.getElementById('expense-viewer-img');
+  if (viewer) viewer.classList.remove('open');
+  if (img) img.src = '';
+}
+
+// 기존 addExpense를 확장
+if (typeof addExpense === 'function') {
+  const originalAddExpense = addExpense;
+  addExpense = function() {
+    const beforeLen = expenses.length;
+    originalAddExpense();
+    if (currentExpensePhoto && expenses.length > beforeLen) {
+      expenses[expenses.length - 1].photo = currentExpensePhoto;
+      save();
+      clearExpensePhoto();
+      renderExpenses();
+    }
+  };
+}
+
+// 기존 renderExpenses를 확장해서 사진 썸네일/수정 버튼 보강
+if (typeof renderExpenses === 'function') {
+  const originalRenderExpenses = renderExpenses;
+  renderExpenses = function() {
+    originalRenderExpenses();
+    document.querySelectorAll('.exp-card').forEach((card, displayIdx) => {
+      const visibleCards = Array.from(document.querySelectorAll('.exp-card'));
+      const memoText = card.querySelector('.exp-memo')?.textContent || '';
+      let idx = expenses.findIndex(e => (e.memo || '') === memoText);
+      if (idx < 0) idx = displayIdx;
+      const e = expenses[idx];
+      if (!e) return;
+
+      if (e.photo && !card.querySelector('.exp-photo-thumb')) {
+        const img = document.createElement('img');
+        img.className = 'exp-photo-thumb';
+        img.src = e.photo;
+        img.onclick = () => openExpensePhotoViewer(e.photo);
+        card.insertBefore(img, card.firstChild);
+      }
+      if (!card.querySelector('.small-edit-btn')) {
+        const btn = document.createElement('button');
+        btn.className = 'small-edit-btn';
+        btn.textContent = '수정';
+        btn.onclick = () => openEditModal('expense', idx);
+        const right = card.querySelector('.exp-card-right') || card;
+        right.prepend(btn);
+      }
+    });
+  };
+}
+
+// 수정 모달
+let editTarget = null;
+
+function closeEditModal(evt) {
+  if (evt && evt.target && evt.target.id !== 'edit-modal') return;
+  const modal = document.getElementById('edit-modal');
+  if (modal) modal.classList.remove('open');
+  editTarget = null;
+}
+
+function editVal(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : '';
+}
+
+function openEditModal(type, index) {
+  editTarget = {type, index};
+  const title = document.getElementById('edit-modal-title');
+  const body = document.getElementById('edit-modal-body');
+  if (!title || !body) return;
+
+  if (type === 'place') {
+    const p = places[index] || {};
+    title.textContent = '장소 수정';
+    body.innerHTML = `
+      <label class="edit-label">장소명</label><input class="edit-input" id="edit-place-name" value="${esc(p.name || '')}">
+      <label class="edit-label">중국어명</label><input class="edit-input" id="edit-place-zh" value="${esc(p.zh || '')}">
+      <label class="edit-label">병음</label><input class="edit-input" id="edit-place-py" value="${esc(p.py || p.pinyin || '')}">
+      <label class="edit-label">주소</label><input class="edit-input" id="edit-place-addr" value="${esc(p.addr || '')}">
+      <label class="edit-label">카테고리</label><input class="edit-input" id="edit-place-cat" value="${esc(p.cat || '')}">
+      <label class="edit-label">링크</label><input class="edit-input" id="edit-place-link" value="${esc(p.link || '')}">
+      <label class="edit-label">메모</label><textarea class="edit-textarea" id="edit-place-memo">${esc(memos[index] || p.memo || '')}</textarea>
+    `;
+  }
+
+  if (type === 'phrase') {
+    const all = [...PRESET, ...customPhrases];
+    const ph = all[index] || {};
+    title.textContent = '문장 수정';
+    body.innerHTML = `
+      <label class="edit-label">한국어</label><input class="edit-input" id="edit-phrase-ko" value="${esc(ph.ko || '')}">
+      <label class="edit-label">중국어</label><input class="edit-input" id="edit-phrase-zh" value="${esc(ph.zh || '')}">
+      <label class="edit-label">병음</label><input class="edit-input" id="edit-phrase-py" value="${esc(ph.py || '')}">
+      <label class="edit-label">카테고리</label><input class="edit-input" id="edit-phrase-cat" value="${esc(ph.cat || '')}">
+    `;
+  }
+
+  if (type === 'expense') {
+    const e = expenses[index] || {};
+    title.textContent = '경비 수정';
+    body.innerHTML = `
+      <label class="edit-label">날짜</label><input class="edit-input" id="edit-exp-date" type="date" value="${esc(e.date || '')}">
+      <label class="edit-label">카테고리</label><input class="edit-input" id="edit-exp-cat" value="${esc(e.cat || '')}">
+      <label class="edit-label">금액 (위안 ¥)</label><input class="edit-input" id="edit-exp-cny" type="number" value="${esc(String(e.cny || ''))}">
+      <label class="edit-label">메모</label><textarea class="edit-textarea" id="edit-exp-memo">${esc(e.memo || '')}</textarea>
+      ${e.photo ? `<div style="margin-top:12px"><img src="${e.photo}" style="width:100%;max-height:180px;object-fit:cover;border-radius:14px"></div>` : ''}
+    `;
+  }
+
+  if (type === 'diary') {
+    const d = diaryEntries[index] || {};
+    title.textContent = '일지 수정';
+    body.innerHTML = `
+      <label class="edit-label">날짜</label><input class="edit-input" id="edit-diary-date" type="date" value="${esc(d.date || '')}">
+      <label class="edit-label">장소</label><input class="edit-input" id="edit-diary-location" value="${esc(d.location || '')}">
+      <label class="edit-label">코멘트</label><textarea class="edit-textarea" id="edit-diary-comment">${esc(d.comment || '')}</textarea>
+    `;
+  }
+
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function saveEditModal() {
+  if (!editTarget) return;
+  const {type, index} = editTarget;
+
+  if (type === 'place') {
+    places[index] = {...(places[index] || {}),
+      name: editVal('edit-place-name'),
+      zh: editVal('edit-place-zh'),
+      py: editVal('edit-place-py'),
+      addr: editVal('edit-place-addr'),
+      cat: editVal('edit-place-cat'),
+      link: editVal('edit-place-link')
+    };
+    memos[index] = editVal('edit-place-memo');
+    save(); renderCatFilter(); renderPlaces();
+  }
+
+  if (type === 'phrase') {
+    const edited = {
+      ko: editVal('edit-phrase-ko'),
+      zh: editVal('edit-phrase-zh'),
+      py: editVal('edit-phrase-py'),
+      cat: editVal('edit-phrase-cat'),
+      custom: true
+    };
+    if (index < PRESET.length) customPhrases.push(edited);
+    else customPhrases[index - PRESET.length] = edited;
+    save(); renderPhrases();
+  }
+
+  if (type === 'expense') {
+    const cny = parseFloat(editVal('edit-exp-cny')) || 0;
+    expenses[index] = {...(expenses[index] || {}),
+      date: editVal('edit-exp-date'),
+      cat: editVal('edit-exp-cat'),
+      cny,
+      krw: Math.round(cny * CNY_RATE),
+      memo: editVal('edit-exp-memo')
+    };
+    save(); renderExpenses();
+  }
+
+  if (type === 'diary') {
+    diaryEntries[index] = {...(diaryEntries[index] || {}),
+      date: editVal('edit-diary-date'),
+      location: editVal('edit-diary-location'),
+      comment: editVal('edit-diary-comment')
+    };
+    saveDiary(); renderDiary();
+  }
+
+  closeEditModal();
+  if (typeof showToast === 'function') showToast('수정 저장됨');
+}
+
+// 장소/문장/일기 렌더 후 수정 버튼 자동 삽입
+function addEditButtonsAfterRender() {
+  document.querySelectorAll('#place-list .card').forEach((card, idx) => {
+    if (!card.querySelector('.small-edit-btn')) {
+      const btn = document.createElement('button');
+      btn.className = 'small-edit-btn';
+      btn.textContent = '수정';
+      btn.onclick = () => openEditModal('place', idx);
+      const header = card.querySelector('.card-header');
+      if (header) header.appendChild(btn);
+    }
+  });
+
+  document.querySelectorAll('#phrase-list .phrase-card').forEach((card, idx) => {
+    if (!card.querySelector('.small-edit-btn')) {
+      const btn = document.createElement('button');
+      btn.className = 'small-edit-btn';
+      btn.textContent = '수정';
+      btn.onclick = () => openEditModal('phrase', idx);
+      card.prepend(btn);
+    }
+  });
+
+  document.querySelectorAll('#diary-list .diary-card').forEach((card, idx) => {
+    if (!card.querySelector('.small-edit-btn')) {
+      const btn = document.createElement('button');
+      btn.className = 'small-edit-btn';
+      btn.textContent = '수정';
+      btn.onclick = () => openEditModal('diary', idx);
+      const footer = card.querySelector('.diary-footer') || card;
+      footer.prepend(btn);
+    }
+  });
+}
+
+['renderPlaces','renderPhrases','renderDiary'].forEach(fnName => {
+  if (typeof window[fnName] === 'function') {
+    const original = window[fnName];
+    window[fnName] = function(...args) {
+      const result = original.apply(this, args);
+      setTimeout(addEditButtonsAfterRender, 0);
+      return result;
+    };
+  }
+});
+
+// PDF 몽환 배경 테마
+(function(){
+  const originalSetPdfTheme = typeof setPdfTheme === 'function' ? setPdfTheme : null;
+  window.setPdfTheme = function(theme){
+    const overlay = document.getElementById('pdf-overlay');
+    if(!overlay) return;
+    overlay.classList.remove('theme-vintage','theme-modern','theme-minimal','theme-travel','theme-dreamy');
+    overlay.classList.add('theme-' + theme);
+    document.querySelectorAll('.pdf-theme-chip').forEach(chip => chip.classList.remove('active'));
+    const chip = document.getElementById('tc-' + theme);
+    if(chip) chip.classList.add('active');
+    if (originalSetPdfTheme && theme !== 'dreamy') {
+      try { originalSetPdfTheme(theme); } catch(e) {}
+    }
+  };
+
+  const originalOpenPdfPreview = typeof openPdfPreview === 'function' ? openPdfPreview : null;
+  if (originalOpenPdfPreview) {
+    window.openPdfPreview = function(){
+      originalOpenPdfPreview();
+      setTimeout(() => setPdfTheme('dreamy'), 0);
+    };
+  }
+})();
+
+</script>
+
+<script>
+/* 갤러리/파일 선택 강제 보정 */
+function openPlaceGalleryPicker(index){
+  const input = document.getElementById('place-file-input');
+  if(!input) return;
+  input.removeAttribute('capture');
+  input.setAttribute('accept','image/jpeg,image/png,image/webp,image/heic,image/heif');
+  input.onchange = function(e){
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(){
+      if(!places[index]) return;
+      places[index].photo = reader.result;
+      if(typeof save === 'function') save();
+      if(typeof renderPlaces === 'function') renderPlaces();
+      if(typeof showToast === 'function') showToast('장소 사진 저장됨');
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  };
+  input.click();
+}
+
+function openPlaceCameraPicker(index){
+  const input = document.getElementById('place-camera-input');
+  if(!input) return;
+  input.setAttribute('accept','image/*');
+  input.setAttribute('capture','environment');
+  input.onchange = function(e){
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(){
+      if(!places[index]) return;
+      places[index].photo = reader.result;
+      if(typeof save === 'function') save();
+      if(typeof renderPlaces === 'function') renderPlaces();
+      if(typeof showToast === 'function') showToast('장소 사진 저장됨');
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  };
+  input.click();
+}
+
+function attachPlacePhotoButtons(){
+  document.querySelectorAll('#place-list .card').forEach((card, idx)=>{
+    if(card.querySelector('.place-gallery-btn')) return;
+
+    const box = document.createElement('div');
+    box.style.display = 'flex';
+    box.style.gap = '6px';
+    box.style.marginTop = '8px';
+
+    const galleryBtn = document.createElement('button');
+    galleryBtn.type = 'button';
+    galleryBtn.className = 'small-edit-btn place-gallery-btn';
+    galleryBtn.textContent = '📁 갤러리/파일';
+    galleryBtn.onclick = () => openPlaceGalleryPicker(idx);
+
+    const cameraBtn = document.createElement('button');
+    cameraBtn.type = 'button';
+    cameraBtn.className = 'small-edit-btn place-camera-btn';
+    cameraBtn.textContent = '📷 카메라';
+    cameraBtn.onclick = () => openPlaceCameraPicker(idx);
+
+    box.appendChild(galleryBtn);
+    box.appendChild(cameraBtn);
+    card.appendChild(box);
+
+    const p = places[idx];
+    if(p && p.photo && !card.querySelector('.place-photo-preview')){
+      const img = document.createElement('img');
+      img.className = 'place-photo-preview';
+      img.src = p.photo;
+      img.style.width = '100%';
+      img.style.maxHeight = '220px';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = '12px';
+      img.style.marginTop = '10px';
+      img.onclick = () => {
+        const viewer = document.getElementById('photo-viewer');
+        const viewerImg = document.getElementById('viewer-img');
+        if(viewer && viewerImg){
+          viewerImg.src = p.photo;
+          viewer.classList.add('open');
+        }
+      };
+      card.appendChild(img);
+    }
+  });
+}
+
+window.addEventListener('load', ()=>{
+  setTimeout(attachPlacePhotoButtons, 400);
+  const originalRenderPlaces = window.renderPlaces;
+  if(typeof originalRenderPlaces === 'function' && !window.__placePhotoRenderPatched){
+    window.renderPlaces = function(){
+      const result = originalRenderPlaces.apply(this, arguments);
+      setTimeout(attachPlacePhotoButtons, 0);
+      return result;
+    };
+    window.__placePhotoRenderPatched = true;
+  }
+});
+</script>
+
+
+<script>
+function attachPlaceButtons(){
+  document.querySelectorAll('#place-list .card').forEach((card,idx)=>{
+    if(card.querySelector('.place-photo-btn')) return;
+
+    const wrap=document.createElement('div');
+    wrap.style.marginTop='10px';
+
+    const btn=document.createElement('button');
+    btn.className='small-edit-btn place-photo-btn';
+    btn.textContent='📁 장소 사진 추가';
+
+    btn.onclick=()=>{
+      const input=document.getElementById('place-file-input');
+      input.removeAttribute('capture');
+      input.onchange=(e)=>{
+        const file=e.target.files[0];
+        if(!file) return;
+
+        const reader=new FileReader();
+        reader.onload=()=>{
+          if(!places[idx]) return;
+          places[idx].photo=reader.result;
+          save();
+          renderPlaces();
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    };
+
+    wrap.appendChild(btn);
+    card.appendChild(wrap);
+
+    if(places[idx] && places[idx].photo && !card.querySelector('.place-photo-preview')){
+      const img=document.createElement('img');
+      img.src=places[idx].photo;
+      img.className='place-photo-preview';
+      img.style.width='100%';
+      img.style.maxHeight='220px';
+      img.style.objectFit='cover';
+      img.style.borderRadius='12px';
+      img.style.marginTop='8px';
+      card.appendChild(img);
+    }
+  });
+}
+
+window.addEventListener('load',()=>{
+  setTimeout(attachPlaceButtons,500);
+
+  if(window.renderPlaces && !window.__placePatch){
+    const oldRender=window.renderPlaces;
+    window.renderPlaces=function(){
+      const r=oldRender.apply(this,arguments);
+      setTimeout(attachPlaceButtons,50);
+      return r;
+    }
+    window.__placePatch=true;
+  }
+});
+</script>
+
+</body>
+</html>
